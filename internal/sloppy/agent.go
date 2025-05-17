@@ -137,7 +137,7 @@ func (a *Agent) llm(ctx context.Context) (*anthropic.Message, error) {
 					Type:       constant.Object(tool.Tool.InputSchema.Type),
 					Properties: tool.Tool.InputSchema.Properties,
 					ExtraFields: map[string]any{
-						"require": tool.Tool.InputSchema.Required,
+						"required": tool.Tool.InputSchema.Required,
 					},
 				},
 			},
