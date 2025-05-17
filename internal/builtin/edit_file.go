@@ -45,19 +45,19 @@ func (t *EditFileTool) ServerTool() server.ServerTool {
 
 func (t *EditFileTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
-		Path   string `param:"path,required"`
-		OldStr string `param:"old_str"`
-		NewStr string `param:"new_str,required"`
+		Path    string `param:"path,required"`
+		Search  string `param:"search"`
+		Replace string `param:"replace,required"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
 		return nil, err
 	}
-	if input.Path == "" || input.NewStr == input.OldStr {
+	if input.Path == "" || input.Replace == input.Search {
 		return nil, fmt.Errorf("invalid input")
 	}
 	data, err := os.ReadFile(input.Path)
 	if err != nil {
-		if os.IsNotExist(err) && input.OldStr == "" {
+		if os.IsNotExist(err) && input.Search == "" {
 			if err := os.WriteFile(input.Path, []byte(input.Path), 0644); err != nil {
 				return nil, err
 			}
@@ -65,10 +65,10 @@ func (t *EditFileTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mc
 		}
 		return nil, err
 	}
-	if !bytes.Contains(data, []byte(input.OldStr)) {
-		return nil, errors.New("old_str not found in file")
+	if !bytes.Contains(data, []byte(input.Search)) {
+		return nil, errors.New("search text not found in file")
 	}
-	data = bytes.ReplaceAll(data, []byte(input.OldStr), []byte(input.NewStr))
+	data = bytes.ReplaceAll(data, []byte(input.Search), []byte(input.Replace))
 	if err := os.WriteFile(input.Path, data, 0644); err != nil {
 		return nil, err
 	}
