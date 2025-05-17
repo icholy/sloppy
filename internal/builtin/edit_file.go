@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/icholy/sloppy/internal/mcpx"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -23,10 +24,19 @@ func (t *EditFileTool) ServerTool() server.ServerTool {
 				mcp.Description("The path of the file relative to the current working directory."),
 			),
 			mcp.WithString("search",
-				mcp.Description("Text to search for. This must exactly match one match. Newlines and whitespace must be identical."),
+				mcp.Description(strings.Join([]string{
+					"Text to search for.",
+					"search text must match the associated file section to find EXACTLY.",
+					"It must match character-for-character including whitespace, indentation, line endings.",
+					"Include all comments, docstrings, etc.",
+				}, ". ")),
 			),
 			mcp.WithString("replace",
-				mcp.Description("Text used to replace the the matched 'search' text"),
+				mcp.Description(strings.Join([]string{
+					"Text used to replace the the matched 'search' text",
+					"will ONLY replace the first match occurrence",
+					"Include *just* enough lines in the 'search' parameter to uniquely match each set of lines that need to change"
+				}, ". ")),
 			),
 		),
 		Handler: t.Handle,
