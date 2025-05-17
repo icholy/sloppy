@@ -35,7 +35,7 @@ func (t *EditFileTool) ServerTool() server.ServerTool {
 				mcp.Description(strings.Join([]string{
 					"Text used to replace the the matched 'search' text",
 					"will ONLY replace the first match occurrence",
-					"Include *just* enough lines in the 'search' parameter to uniquely match each set of lines that need to change"
+					"Include *just* enough lines in the 'search' parameter to uniquely match each set of lines that need to change",
 				}, ". ")),
 			),
 		),
