@@ -132,7 +132,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 					data, _ := r.MarshalJSON()
 					text = string(data)
 				}
-				fmt.Fprintf(a.output, "%s: %s", termcolor.Text("error", termcolor.Red), text)
+				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text("error", termcolor.Red), text)
 			}
 		}
 	}
