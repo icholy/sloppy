@@ -109,18 +109,31 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
 		}
 	}
+	var blocks []anthropic.ContentBlockParamUnion
 	res, err := tool.Client.CallTool(ctx, req)
 	if err != nil {
-		return []anthropic.ContentBlockParamUnion{
-			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
+		blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
+	} else {
+		for _, c := range res.Content {
+			if text, ok := c.(mcp.TextContent); ok {
+				blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, text.Text, res.IsError))
+			} else {
+				blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, "unsupported response type", true))
+			}
 		}
 	}
-	var blocks []anthropic.ContentBlockParamUnion
-	for _, c := range res.Content {
-		if text, ok := c.(mcp.TextContent); ok {
-			blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, text.Text, res.IsError))
-		} else {
-			blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, "unsupported response type", true))
+	for _, b := range blocks {
+		if r := b.OfRequestToolResultBlock; r != nil && r.IsError.Value {
+			for _, c := range r.Content {
+				var text string
+				if t := c.GetText(); t != nil {
+					text = *t
+				} else {
+					data, _ := r.MarshalJSON()
+					text = string(data)
+				}
+				fmt.Fprintf(a.output, "%s: %s", termcolor.Text("error", termcolor.Red), text)
+			}
 		}
 	}
 	return blocks
