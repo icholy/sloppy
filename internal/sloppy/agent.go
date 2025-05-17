@@ -59,12 +59,16 @@ func (a *Agent) Run(ctx context.Context) error {
 		if !a.scanner.Scan() {
 			break
 		}
-		a.messages = append(a.messages, anthropic.NewUserMessage(anthropic.NewTextBlock(a.scanner.Text())))
+		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(a.scanner.Text())))
 		if err := a.loop(ctx); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (a *Agent) append(m anthropic.MessageParam) {
+	a.messages = append(a.messages, m)
 }
 
 func (a *Agent) loop(ctx context.Context) error {
@@ -73,7 +77,7 @@ func (a *Agent) loop(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		a.messages = append(a.messages, response.ToParam())
+		a.append(response.ToParam())
 		var results []anthropic.ContentBlockParamUnion
 		for _, block := range response.Content {
 			switch block.Type {
@@ -86,7 +90,7 @@ func (a *Agent) loop(ctx context.Context) error {
 		if len(results) == 0 {
 			return nil
 		}
-		a.messages = append(a.messages, anthropic.NewUserMessage(results...))
+		a.append(anthropic.NewUserMessage(results...))
 	}
 }
 
