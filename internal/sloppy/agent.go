@@ -48,10 +48,10 @@ func New(opt Options) *Agent {
 	}
 }
 
-func (a *Agent) Run(ctx context.Context, input string) error {
+func (a *Agent) Run(ctx context.Context, input string, tools bool) error {
 	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input)))
 	for {
-		response, err := a.llm(ctx)
+		response, err := a.llm(ctx, tools)
 		if err != nil {
 			return err
 		}
@@ -117,26 +117,28 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 	return blocks
 }
 
-func (a *Agent) llm(ctx context.Context) (*anthropic.Message, error) {
+func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error) {
 	params := anthropic.MessageNewParams{
 		Model:     anthropic.ModelClaude3_7SonnetLatest,
 		MaxTokens: 1024,
 		Messages:  a.messages,
 	}
-	for _, tool := range a.tools {
-		params.Tools = append(params.Tools, anthropic.ToolUnionParam{
-			OfTool: &anthropic.ToolParam{
-				Name:        tool.Tool.Name,
-				Description: anthropic.String(tool.Tool.Description),
-				InputSchema: anthropic.ToolInputSchemaParam{
-					Type:       constant.Object(tool.Tool.InputSchema.Type),
-					Properties: tool.Tool.InputSchema.Properties,
-					ExtraFields: map[string]any{
-						"required": tool.Tool.InputSchema.Required,
+	if tools {
+		for _, tool := range a.tools {
+			params.Tools = append(params.Tools, anthropic.ToolUnionParam{
+				OfTool: &anthropic.ToolParam{
+					Name:        tool.Tool.Name,
+					Description: anthropic.String(tool.Tool.Description),
+					InputSchema: anthropic.ToolInputSchemaParam{
+						Type:       constant.Object(tool.Tool.InputSchema.Type),
+						Properties: tool.Tool.InputSchema.Properties,
+						ExtraFields: map[string]any{
+							"required": tool.Tool.InputSchema.Required,
+						},
 					},
 				},
-			},
-		})
+			})
+		}
 	}
 	return a.client.Messages.New(ctx, params)
 }

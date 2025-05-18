@@ -43,7 +43,7 @@ func main() {
 		if !scanner.Scan() {
 			break
 		}
-		if err := agent.Run(ctx, scanner.Text()); err != nil {
+		if err := agent.Run(ctx, scanner.Text(), true); err != nil {
 			log.Fatal(err)
 		}
 	}
