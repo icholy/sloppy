@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/icholy/sloppy/internal/builtin"
 	"github.com/icholy/sloppy/internal/sloppy"
@@ -56,7 +58,23 @@ func main() {
 		if !scanner.Scan() {
 			break
 		}
-		if err := agent.Run(ctx, scanner.Text(), true); err != nil {
+		text := scanner.Text()
+		switch strings.TrimSpace(text) {
+		case "/tools":
+			for i, t := range opt.Tools {
+				if i > 0 {
+					fmt.Println()
+				}
+				data, _ := json.MarshalIndent(t.Tool.InputSchema, "", "  ")
+				fmt.Printf("Tool: %s:\nDescription: %s\nSchema: %s\n",
+					t.Tool.Name,
+					t.Tool.Description,
+					data,
+				)
+			}
+			continue
+		}
+		if err := agent.Run(ctx, text, true); err != nil {
 			log.Fatal(err)
 		}
 	}
