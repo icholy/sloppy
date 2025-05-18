@@ -40,7 +40,7 @@ func main() {
 		tools := builtin.Tools("Sloppy Built-in tools",
 			&builtin.RunAgent{Options: &opt},
 			&builtin.RunCommand{},
-			&builtin.ApplyDiff{},
+			&builtin.ApplyDiff{Threshold: 0.9},
 			&builtin.WriteFile{},
 		)
 		opt.Tools = append(opt.Tools, tools...)

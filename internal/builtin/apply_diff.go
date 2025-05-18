@@ -12,7 +12,9 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-type ApplyDiff struct{}
+type ApplyDiff struct {
+	Threshold float64
+}
 
 func (ad *ApplyDiff) ServerTool() server.ServerTool {
 	return server.ServerTool{
@@ -65,7 +67,7 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	src := string(data)
 	var edits []patcher.Edit
 	for _, d := range diffs {
-		e, ok := patcher.Search(src, d, 0.9)
+		e, ok := patcher.Search(src, d, ad.Threshold)
 		if !ok {
 			return nil, fmt.Errorf("no match for search text: %s", d.Search)
 		}
