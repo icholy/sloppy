@@ -75,7 +75,7 @@ func (t *RunAgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mc
 	a := t.GetAgent(input.Name)
 	prompt := strings.Join([]string{
 		input.Prompt,
-		"Note: Only your last response message will be provided back to the user.",
+		"Note: Only your final response message will be provided back to the user.",
 		"This last message should contain all of the relevant information.",
 	}, "\n\n")
 	if err := a.Run(ctx, prompt, true); err != nil {
