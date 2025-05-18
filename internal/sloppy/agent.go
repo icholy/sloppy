@@ -99,20 +99,20 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
 		}
 	}
-	var blocks []anthropic.ContentBlockParamUnion
+	var results []anthropic.ContentBlockParamUnion
 	res, err := tool.Client.CallTool(ctx, req)
 	if err != nil {
-		blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
+		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
 	} else {
 		for _, c := range res.Content {
 			if text, ok := c.(mcp.TextContent); ok {
-				blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, text.Text, res.IsError))
+				results = append(results, anthropic.NewToolResultBlock(block.ID, text.Text, res.IsError))
 			} else {
-				blocks = append(blocks, anthropic.NewToolResultBlock(block.ID, "unsupported response type", true))
+				results = append(results, anthropic.NewToolResultBlock(block.ID, "unsupported response type", true))
 			}
 		}
 	}
-	for _, b := range blocks {
+	for _, b := range results {
 		if r := b.OfRequestToolResultBlock; r != nil && r.IsError.Value {
 			for _, c := range r.Content {
 				var text string
@@ -126,7 +126,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 			}
 		}
 	}
-	return blocks
+	return results
 }
 
 func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error) {
