@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/icholy/sloppy/internal/mcpx"
@@ -23,7 +24,7 @@ func (t *RunAgentTool) GetAgent(name string) *sloppy.Agent {
 		return a
 	}
 	opt := *t.Options
-	opt.Name = name
+	opt.Name = fmt.Sprintf("Sloppy(%s)", name)
 	a := sloppy.New(opt)
 	t.agents[name] = a
 	return a

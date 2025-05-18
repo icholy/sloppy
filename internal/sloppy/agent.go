@@ -44,6 +44,7 @@ func New(opt Options) *Agent {
 		tools[tool.Tool.Name] = tool
 	}
 	return &Agent{
+		name:   opt.Name,
 		client: opt.Client,
 		output: opt.Output,
 		tools:  tools,
