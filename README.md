@@ -30,6 +30,7 @@ Sloppy comes with 5 built-in tools:
 - `run_command`: Executes shell commands
 - `run_agent`: Delegates subtasks to child agents
 - `apply_diff`: Applies search/replace changes to a text file using diff blocks
+- `read_file`: Reads content from a file, optionally specifying line ranges
 - `write_file`: Creates or replaces a file with specified content
 
 **Note**: These can be disabled using the `--builtin` flag.
