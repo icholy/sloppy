@@ -59,15 +59,15 @@ func (a *Agent) Run(ctx context.Context) error {
 		if !a.scanner.Scan() {
 			break
 		}
-		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(a.scanner.Text())))
-		if err := a.loop(ctx); err != nil {
+		if err := a.Loop(ctx, a.scanner.Text()); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (a *Agent) loop(ctx context.Context) error {
+func (a *Agent) Loop(ctx context.Context, input string) error {
+	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input)))
 	for {
 		response, err := a.llm(ctx)
 		if err != nil {
