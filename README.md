@@ -5,9 +5,7 @@
 
 ## Agent Delegation
 
-Sloppy can delegate parts of a task to child agents. When a task is complex or has distinct steps, the main agent can spawn child agents to handle specific subtasks.
-
-To keep things efficient, child agents don’t add their full output or execution details to the main agent’s context. Instead, they return only a brief summary of their results. This helps the main agent stay focused and prevents the context from growing too large, making it easier to manage complex workflows.
+Sloppy's main agent can delegate subtasks by spawning child agents, which are themselves new, independent instances of Sloppy. These child agents execute their assigned portion of a task and return only a brief summary of their results (not their full output or detailed execution logs). This prevents the main agent's context window from being filled with unnecessary detail and helps the parent agent stay focused on the overall task.
 
 ### Install
 
