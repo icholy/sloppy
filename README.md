@@ -25,8 +25,14 @@ You: I'd like some slop.
 
 ### Tools
 
-Sloppy comes with 3 built-in tools: `edit_file`, `run_command`, and `run_agent`.
-These can be disabled using the `--builtin` flag.
+Sloppy comes with 5 built-in tools:
+
+- `run_command`: Executes shell commands
+- `run_agent`: Delegates subtasks to child agents
+- `apply_diff`: Applies search/replace changes to a text file using diff blocks
+- `write_file`: Creates or replaces a file with specified content
+
+**Note**: These can be disabled using the `--builtin` flag.
 
 ### MCP
 
