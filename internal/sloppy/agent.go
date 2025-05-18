@@ -1,7 +1,6 @@
 package sloppy
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,21 +14,24 @@ import (
 )
 
 type Options struct {
+	Name   string
 	Client *anthropic.Client
 	Output io.Writer
 	Tools  []Tool
 }
 
 type Agent struct {
+	name     string
 	client   *anthropic.Client
-	scanner  *bufio.Scanner
-	input    io.Reader
 	output   io.Writer
 	tools    map[string]Tool
 	messages []anthropic.MessageParam
 }
 
 func New(opt Options) *Agent {
+	if opt.Name == "" {
+		opt.Name = "Sloppy"
+	}
 	if opt.Client == nil {
 		client := anthropic.NewClient()
 		opt.Client = &client
@@ -60,7 +62,7 @@ func (a *Agent) Run(ctx context.Context, input string, tools bool) error {
 		for _, block := range response.Content {
 			switch block.Type {
 			case "text":
-				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text("Sloppy", termcolor.Yellow), block.Text)
+				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text(a.name, termcolor.Yellow), block.Text)
 			case "tool_use":
 				results = append(results, a.tool(ctx, block)...)
 			}

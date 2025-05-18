@@ -22,7 +22,9 @@ func (t *RunAgentTool) GetAgent(name string) *sloppy.Agent {
 	if a, ok := t.agents[name]; ok {
 		return a
 	}
-	a := sloppy.New(t.Options)
+	opt := t.Options
+	opt.Name = name
+	a := sloppy.New(opt)
 	t.agents[name] = a
 	return a
 }
