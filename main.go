@@ -42,6 +42,7 @@ func main() {
 			&builtin.RunCommand{},
 			&builtin.ApplyDiff{Threshold: 0.9},
 			&builtin.WriteFile{},
+			&builtin.ReadFile{},
 		)
 		opt.Tools = append(opt.Tools, tools...)
 	}
