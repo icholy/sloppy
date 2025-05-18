@@ -41,7 +41,7 @@ func New(opt Options) *Agent {
 	}
 	tools := map[string]Tool{}
 	for _, tool := range opt.Tools {
-		tools[tool.Tool.Name] = tool
+		tools[tool.Name] = tool
 	}
 	return &Agent{
 		name:   opt.Name,
@@ -93,7 +93,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 	}
 	fmt.Fprintf(a.output, "%s: %s(%s)\n", termcolor.Text("tool", termcolor.Green), block.Name, block.Input)
 	var req mcp.CallToolRequest
-	req.Params.Name = block.Name
+	req.Params.Name = tool.Tool.Name
 	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
 		return []anthropic.ContentBlockParamUnion{
 			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
@@ -139,7 +139,7 @@ func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error)
 		for _, tool := range a.tools {
 			params.Tools = append(params.Tools, anthropic.ToolUnionParam{
 				OfTool: &anthropic.ToolParam{
-					Name:        tool.Tool.Name,
+					Name:        tool.Name,
 					Description: anthropic.String(tool.Tool.Description),
 					InputSchema: anthropic.ToolInputSchemaParam{
 						Type:       constant.Object(tool.Tool.InputSchema.Type),

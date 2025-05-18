@@ -37,7 +37,7 @@ func main() {
 		opt.Tools = append(opt.Tools, tools...)
 	}
 	if useBuiltin {
-		tools := builtin.Tools("Sloppy Built-in tools",
+		tools := builtin.Tools("builtin",
 			&builtin.RunAgent{Options: &opt},
 			&builtin.RunCommand{},
 			&builtin.ApplyDiff{Threshold: 0.9},
@@ -68,8 +68,8 @@ func main() {
 					fmt.Println()
 				}
 				data, _ := json.MarshalIndent(t.Tool.InputSchema, "", "  ")
-				fmt.Printf("Tool: %s:\nDescription: %s\nSchema: %s\n",
-					t.Tool.Name,
+				fmt.Printf("Tool: %s\nDescription: %s\nSchema: %s\n",
+					t.Name,
 					t.Tool.Description,
 					data,
 				)

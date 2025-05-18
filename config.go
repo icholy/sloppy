@@ -42,7 +42,7 @@ func (c *Config) ListTools(ctx context.Context) ([]sloppy.Tool, error) {
 		if _, err := c.Initialize(ctx, mcp.InitializeRequest{}); err != nil {
 			return nil, fmt.Errorf("failed to initialize mcp client: %s: %w", name, err)
 		}
-		tt, err := sloppy.ListClientTools(ctx, c)
+		tt, err := sloppy.ListClientTools(ctx, name, c)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list mcp tools: %s: %w", name, err)
 		}

@@ -35,7 +35,7 @@ func Tools(name string, providers ...ToolProvider) []sloppy.Tool {
 	if _, err := client.Initialize(ctx, mcp.InitializeRequest{}); err != nil {
 		panic(err)
 	}
-	tools, err := sloppy.ListClientTools(ctx, client)
+	tools, err := sloppy.ListClientTools(ctx, name, client)
 	if err != nil {
 		panic(err)
 	}
