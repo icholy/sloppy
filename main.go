@@ -14,10 +14,12 @@ import (
 )
 
 func main() {
+	var prompt string
 	var configPath string
 	var useBuiltin bool
 	flag.StringVar(&configPath, "config", "", "configuration file")
 	flag.BoolVar(&useBuiltin, "builtin", true, "use built-in tools")
+	flag.StringVar(&prompt, "prompt", "", "use this prompt and then exit")
 	flag.Parse()
 	var opt sloppy.Options
 	ctx := context.Background()
@@ -36,6 +38,12 @@ func main() {
 		opt.Tools = append(opt.Tools, builtin.Tools(&opt)...)
 	}
 	agent := sloppy.New(opt)
+	if prompt != "" {
+		if err := agent.Run(ctx, prompt, true); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 	fmt.Println("Tell sloppy what to do")
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
