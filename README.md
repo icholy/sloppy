@@ -25,7 +25,7 @@ You: I'd like some slop.
 
 ### Tools
 
-Sloppy comes with 2 built-in tools: `edit_file`, `run_command`, and `run_agent`.
+Sloppy comes with 3 built-in tools: `edit_file`, `run_command`, and `run_agent`.
 These can be disabled using the `--builtin` flag.
 
 ### MCP
