@@ -13,9 +13,9 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-type EditFileTool struct{}
+type EditFile struct{}
 
-func (t *EditFileTool) ServerTool() server.ServerTool {
+func (ef *EditFile) ServerTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool("edit_file",
 			mcp.WithDescription("Edit a file in place. To create a file, omit the 'search' parameter."),
@@ -39,11 +39,11 @@ func (t *EditFileTool) ServerTool() server.ServerTool {
 				}, ". ")),
 			),
 		),
-		Handler: t.Handle,
+		Handler: ef.Handle,
 	}
 }
 
-func (t *EditFileTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (ef *EditFile) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
 		Path    string `param:"path,required"`
 		Search  string `param:"search"`

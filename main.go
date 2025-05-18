@@ -35,7 +35,12 @@ func main() {
 		opt.Tools = append(opt.Tools, tools...)
 	}
 	if useBuiltin {
-		opt.Tools = append(opt.Tools, builtin.Tools(&opt)...)
+		tools := builtin.Tools("Sloppy Built-in tools",
+			&builtin.RunAgent{Options: &opt},
+			&builtin.EditFile{},
+			&builtin.RunCommand{},
+		)
+		opt.Tools = append(opt.Tools, tools...)
 	}
 	agent := sloppy.New(opt)
 	if prompt != "" {

@@ -15,9 +15,9 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-type RunCommandTool struct{}
+type RunCommand struct{}
 
-func (t *RunCommandTool) ServerTool() server.ServerTool {
+func (rc *RunCommand) ServerTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool("run_command",
 			mcp.WithDescription("Execute a shell command and return its output. Use this for running commands in the terminal."),
@@ -26,11 +26,11 @@ func (t *RunCommandTool) ServerTool() server.ServerTool {
 				mcp.Description("The shell command to execute."),
 			),
 		),
-		Handler: t.Handle,
+		Handler: rc.Handle,
 	}
 }
 
-func (t *RunCommandTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (rc *RunCommand) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
 		Command string `param:"command,required"`
 	}

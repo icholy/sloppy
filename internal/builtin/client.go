@@ -9,29 +9,25 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// NewClient returns an in-process MCP server
-// which implements the built-in sloppy tools
-func NewClient(opt *sloppy.Options) (*client.Client, error) {
+type ToolProvider interface {
+	ServerTool() server.ServerTool
+}
+
+func NewClient(name string, providers ...ToolProvider) (*client.Client, error) {
 	server := server.NewMCPServer(
-		"Sloppy Built-In Tools",
-		"0.0.1",
+		name,
+		"0.0.0",
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 	)
-	runCommandTool := &RunCommandTool{}
-	editFileTool := &EditFileTool{}
-	runAgentTool := &RunAgentTool{Options: opt}
-	server.AddTools(
-		runCommandTool.ServerTool(),
-		editFileTool.ServerTool(),
-		runAgentTool.ServerTool(),
-	)
+	for _, p := range providers {
+		server.AddTools(p.ServerTool())
+	}
 	return client.NewInProcessClient(server)
 }
 
-// Tools returns the built-in tools
-func Tools(opts *sloppy.Options) []sloppy.Tool {
-	client, err := NewClient(opts)
+func Tools(name string, providers ...ToolProvider) []sloppy.Tool {
+	client, err := NewClient(name, providers...)
 	if err != nil {
 		panic(err)
 	}

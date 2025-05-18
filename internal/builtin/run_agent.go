@@ -11,26 +11,26 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-type RunAgentTool struct {
+type RunAgent struct {
 	Options *sloppy.Options
 	agents  map[string]*sloppy.Agent
 }
 
-func (t *RunAgentTool) GetAgent(name string) *sloppy.Agent {
-	if t.agents == nil {
-		t.agents = map[string]*sloppy.Agent{}
+func (ra *RunAgent) GetAgent(name string) *sloppy.Agent {
+	if ra.agents == nil {
+		ra.agents = map[string]*sloppy.Agent{}
 	}
-	if a, ok := t.agents[name]; ok {
+	if a, ok := ra.agents[name]; ok {
 		return a
 	}
-	opt := *t.Options
+	opt := *ra.Options
 	opt.Name = fmt.Sprintf("Sloppy(%s)", name)
 	a := sloppy.New(opt)
-	t.agents[name] = a
+	ra.agents[name] = a
 	return a
 }
 
-func (t *RunAgentTool) ServerTool() server.ServerTool {
+func (ra *RunAgent) ServerTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool("run_agent",
 			mcp.WithDescription(strings.Join([]string{
@@ -60,11 +60,11 @@ func (t *RunAgentTool) ServerTool() server.ServerTool {
 				}, " ")),
 			),
 		),
-		Handler: t.Handle,
+		Handler: ra.Handle,
 	}
 }
 
-func (t *RunAgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (ra *RunAgent) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
 		Name   string `param:"name,required"`
 		Prompt string `param:"prompt,required"`
@@ -72,7 +72,7 @@ func (t *RunAgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mc
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
 		return nil, err
 	}
-	a := t.GetAgent(input.Name)
+	a := ra.GetAgent(input.Name)
 	prompt := strings.Join([]string{
 		input.Prompt,
 		"Note: Only your final response message will be provided back to the user.",
