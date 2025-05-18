@@ -11,7 +11,7 @@ import (
 
 // NewClient returns an in-process MCP server
 // which implements the built-in sloppy tools
-func NewClient() (*client.Client, error) {
+func NewClient(opt *sloppy.Options) (*client.Client, error) {
 	server := server.NewMCPServer(
 		"Sloppy Built-In Tools",
 		"0.0.1",
@@ -20,16 +20,18 @@ func NewClient() (*client.Client, error) {
 	)
 	runCommandTool := &RunCommandTool{}
 	editFileTool := &EditFileTool{}
+	runAgentTool := &RunAgentTool{Options: opt}
 	server.AddTools(
 		runCommandTool.ServerTool(),
 		editFileTool.ServerTool(),
+		runAgentTool.ServerTool(),
 	)
 	return client.NewInProcessClient(server)
 }
 
 // Tools returns the built-in tools
-func Tools() []sloppy.Tool {
-	client, err := NewClient()
+func Tools(opts *sloppy.Options) []sloppy.Tool {
+	client, err := NewClient(opts)
 	if err != nil {
 		panic(err)
 	}

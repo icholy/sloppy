@@ -11,7 +11,7 @@ import (
 )
 
 type RunAgentTool struct {
-	Options sloppy.Options
+	Options *sloppy.Options
 	agents  map[string]*sloppy.Agent
 }
 
@@ -22,7 +22,7 @@ func (t *RunAgentTool) GetAgent(name string) *sloppy.Agent {
 	if a, ok := t.agents[name]; ok {
 		return a
 	}
-	opt := t.Options
+	opt := *t.Options
 	opt.Name = name
 	a := sloppy.New(opt)
 	t.agents[name] = a

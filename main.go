@@ -20,9 +20,6 @@ func main() {
 	flag.BoolVar(&useBuiltin, "builtin", true, "use built-in tools")
 	flag.Parse()
 	var opt sloppy.Options
-	if useBuiltin {
-		opt.Tools = append(opt.Tools, builtin.Tools()...)
-	}
 	ctx := context.Background()
 	if configPath != "" {
 		config, err := ReadConfig(configPath)
@@ -34,6 +31,9 @@ func main() {
 			log.Fatal(err)
 		}
 		opt.Tools = append(opt.Tools, tools...)
+	}
+	if useBuiltin {
+		opt.Tools = append(opt.Tools, builtin.Tools(&opt)...)
 	}
 	agent := sloppy.New(opt)
 	fmt.Println("Tell sloppy what to do")
