@@ -39,8 +39,9 @@ func main() {
 	if useBuiltin {
 		tools := builtin.Tools("Sloppy Built-in tools",
 			&builtin.RunAgent{Options: &opt},
-			&builtin.EditFile{},
 			&builtin.RunCommand{},
+			&builtin.ApplyDiff{},
+			&builtin.WriteFile{},
 		)
 		opt.Tools = append(opt.Tools, tools...)
 	}
