@@ -135,7 +135,6 @@ func (p *parser) parseDiff() (Diff, error) {
 		diff.Search += p.current.Text
 		p.read()
 	}
-	diff.Search = strings.TrimRight(diff.Search, "\r\n")
 	if _, err := p.expect(TextSeparatorType); err != nil {
 		return Diff{}, err
 	}
@@ -143,7 +142,6 @@ func (p *parser) parseDiff() (Diff, error) {
 		diff.Replace += p.current.Text
 		p.read()
 	}
-	diff.Replace = strings.TrimRight(diff.Replace, "\r\n")
 	if _, err := p.expect(EndReplaceType); err != nil {
 		return Diff{}, nil
 	}

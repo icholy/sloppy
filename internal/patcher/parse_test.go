@@ -111,8 +111,8 @@ func TestParse(t *testing.T) {
 			diffs: []Diff{
 				{
 					Line:    1,
-					Search:  "foo",
-					Replace: "bar",
+					Search:  "foo\n",
+					Replace: "bar\n",
 				},
 			},
 			err: false,
@@ -123,12 +123,12 @@ func TestParse(t *testing.T) {
 			diffs: []Diff{
 				{
 					Line:    1,
-					Search:  "foo",
-					Replace: "bar",
+					Search:  "foo\n",
+					Replace: "bar\n",
 				}, {
 					Line:    3,
-					Search:  "baz",
-					Replace: "qux",
+					Search:  "baz\n",
+					Replace: "qux\n",
 				},
 			},
 			err: false,
@@ -150,8 +150,8 @@ func TestParse(t *testing.T) {
 			input: "<<<<<<< SEARCH line:34\nfoo\nbar\n=======\nbaz\nqux\n>>>>>>> REPLACE\n",
 			diffs: []Diff{{
 				Line:    34,
-				Search:  "foo\nbar",
-				Replace: "baz\nqux",
+				Search:  "foo\nbar\n",
+				Replace: "baz\nqux\n",
 			}},
 			err: false,
 		},
