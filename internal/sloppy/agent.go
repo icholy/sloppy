@@ -16,7 +16,6 @@ import (
 
 type Options struct {
 	Client *anthropic.Client
-	Input  io.Reader
 	Output io.Writer
 	Tools  []Tool
 }
@@ -24,6 +23,7 @@ type Options struct {
 type Agent struct {
 	client   *anthropic.Client
 	scanner  *bufio.Scanner
+	input    io.Reader
 	output   io.Writer
 	tools    map[string]Tool
 	messages []anthropic.MessageParam
@@ -34,9 +34,6 @@ func New(opt Options) *Agent {
 		client := anthropic.NewClient()
 		opt.Client = &client
 	}
-	if opt.Input == nil {
-		opt.Input = os.Stdin
-	}
 	if opt.Output == nil {
 		opt.Output = os.Stdout
 	}
@@ -45,28 +42,13 @@ func New(opt Options) *Agent {
 		tools[tool.Tool.Name] = tool
 	}
 	return &Agent{
-		client:  opt.Client,
-		scanner: bufio.NewScanner(opt.Input),
-		output:  opt.Output,
-		tools:   tools,
+		client: opt.Client,
+		output: opt.Output,
+		tools:  tools,
 	}
 }
 
-func (a *Agent) Run(ctx context.Context) error {
-	fmt.Fprintf(a.output, "Tell sloppy what to do\n")
-	for {
-		fmt.Fprintf(a.output, "%s: ", termcolor.Text("You", termcolor.Blue))
-		if !a.scanner.Scan() {
-			break
-		}
-		if err := a.Loop(ctx, a.scanner.Text()); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (a *Agent) Loop(ctx context.Context, input string) error {
+func (a *Agent) Run(ctx context.Context, input string) error {
 	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input)))
 	for {
 		response, err := a.llm(ctx)

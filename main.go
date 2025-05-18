@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/icholy/sloppy/internal/builtin"
 	"github.com/icholy/sloppy/internal/sloppy"
+	"github.com/icholy/sloppy/internal/termcolor"
 )
 
 func main() {
@@ -32,7 +36,15 @@ func main() {
 		opt.Tools = append(opt.Tools, tools...)
 	}
 	agent := sloppy.New(opt)
-	if err := agent.Run(ctx); err != nil {
-		log.Fatal(err)
+	fmt.Println("Tell sloppy what to do")
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Printf("%s: ", termcolor.Text("You", termcolor.Blue))
+		if !scanner.Scan() {
+			break
+		}
+		if err := agent.Run(ctx, scanner.Text()); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
