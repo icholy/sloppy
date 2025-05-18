@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/shared/constant"
@@ -70,6 +71,15 @@ func (a *Agent) Run(ctx context.Context, input string, tools bool) error {
 		}
 		a.append(anthropic.NewUserMessage(results...))
 	}
+}
+
+func (a *Agent) LastMessageJSON() string {
+	if len(a.messages) == 0 {
+		return ""
+	}
+	last := a.messages[len(a.messages)-1]
+	data, _ := json.Marshal(last)
+	return string(data)
 }
 
 func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []anthropic.ContentBlockParamUnion {
