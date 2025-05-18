@@ -35,8 +35,11 @@ func (t *RunAgentTool) ServerTool() server.ServerTool {
 		Tool: mcp.NewTool("run_agent",
 			mcp.WithDescription(strings.Join([]string{
 				"Run a child agent to execute tasks.",
-				"When you are tasked with executing repetative tasks, you should delegate sub-tasks to child agents.",
 				"You may interact with the same agent instance by specifying the same agent name.",
+				"Use run_agent to delegate only well-defined, independent sub-tasks.",
+				"If you are given a repetitive task, you must create a separate child agent for each repetition.",
+				"Do not batch multiple repetitions into a single child.",
+				"As the parent agent, coordinate the overall work and only delegate when doing so improves clarity or efficiency.",
 			}, " ")),
 			mcp.WithString("name",
 				mcp.Required(),
