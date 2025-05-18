@@ -34,9 +34,9 @@ func (rf *ReadFile) ServerTool() server.ServerTool {
 
 func (rf *ReadFile) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
-		Path      string `param:"path,required"`
-		StartLine int    `param:"start_line"`
-		EndLine   int    `param:"end_line"`
+		Path      string  `param:"path,required"`
+		StartLine float64 `param:"start_line"`
+		EndLine   float64 `param:"end_line"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
 		return nil, err
@@ -50,13 +50,16 @@ func (rf *ReadFile) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 	}
 	lines := strings.SplitAfter(string(data), "\n")
 	nlines := len(lines)
-	start := max(1, input.StartLine)
-	end := min(len(lines), input.EndLine)
-	if start < 1 || start > nlines {
-		return nil, fmt.Errorf("start_line %d out of range (file has %d lines)", start, nlines)
+	start := 1
+	if input.StartLine > 0 {
+		start = int(input.StartLine) // use caller‑supplied value
 	}
-	if end < start || end > nlines {
-		return nil, fmt.Errorf("end_line %d out of range (file has %d lines)", end, nlines)
+	end := nlines
+	if input.EndLine > 0 {
+		end = int(input.EndLine) // use caller‑supplied value
+	}
+	if start < 1 || start > nlines || end < start || end > nlines {
+		return nil, fmt.Errorf("invalid line range %d–%d (file has %d lines)", start, end, nlines)
 	}
 	content := strings.Join(lines[start-1:end], "")
 	return mcp.NewToolResultText(content), nil
