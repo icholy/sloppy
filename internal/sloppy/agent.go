@@ -67,10 +67,6 @@ func (a *Agent) Run(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) append(m anthropic.MessageParam) {
-	a.messages = append(a.messages, m)
-}
-
 func (a *Agent) loop(ctx context.Context) error {
 	for {
 		response, err := a.llm(ctx)
@@ -161,4 +157,8 @@ func (a *Agent) llm(ctx context.Context) (*anthropic.Message, error) {
 		})
 	}
 	return a.client.Messages.New(ctx, params)
+}
+
+func (a *Agent) append(m anthropic.MessageParam) {
+	a.messages = append(a.messages, m)
 }
