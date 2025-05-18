@@ -64,14 +64,6 @@ func (t *RunAgentTool) ServerTool() server.ServerTool {
 	}
 }
 
-var AgentToolSummaryPrompt = strings.Join(
-	[]string{
-		"Summarize your work since the last user prompt.",
-		"This will be the only response the user sees.",
-	},
-	" ",
-)
-
 func (t *RunAgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
 		Name   string `param:"name,required"`
@@ -81,10 +73,12 @@ func (t *RunAgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mc
 		return nil, err
 	}
 	a := t.GetAgent(input.Name)
-	if err := a.Run(ctx, input.Prompt, true); err != nil {
-		return nil, err
-	}
-	if err := a.Run(ctx, AgentToolSummaryPrompt, false); err != nil {
+	prompt := strings.Join([]string{
+		input.Prompt,
+		"Note: Only your last response message will be provided back to the user.",
+		"This last message should contain all of the relevant information.",
+	}, "\n\n")
+	if err := a.Run(ctx, prompt, true); err != nil {
 		return nil, err
 	}
 	return mcp.NewToolResultText(a.LastMessageJSON()), nil
