@@ -10,12 +10,12 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-type AgentTool struct {
+type RunAgentTool struct {
 	Options sloppy.Options
 	agents  map[string]*sloppy.Agent
 }
 
-func (t *AgentTool) GetAgent(name string) *sloppy.Agent {
+func (t *RunAgentTool) GetAgent(name string) *sloppy.Agent {
 	if t.agents == nil {
 		t.agents = map[string]*sloppy.Agent{}
 	}
@@ -27,7 +27,7 @@ func (t *AgentTool) GetAgent(name string) *sloppy.Agent {
 	return a
 }
 
-func (t *AgentTool) ServerTool() server.ServerTool {
+func (t *RunAgentTool) ServerTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool("run_agent",
 			mcp.WithDescription(strings.Join([]string{
@@ -62,7 +62,7 @@ var AgentToolSummaryPrompt = strings.Join(
 	" ",
 )
 
-func (t *AgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (t *RunAgentTool) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var input struct {
 		Name   string `param:"name,required"`
 		Prompt string `param:"prompt,required"`
