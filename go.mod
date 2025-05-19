@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/anthropics/anthropic-sdk-go v0.2.0-beta.3
-	github.com/icholy/fuzzypatch v0.0.2
+	github.com/icholy/fuzzypatch v0.0.3
 	github.com/mark3labs/mcp-go v0.28.0
 )
 
