@@ -60,6 +60,9 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	if err != nil {
 		return nil, err
 	}
+	if len(diffs) == 0 {
+		return nil, fmt.Errorf("no diffs were provided in the request")
+	}
 	data, err := os.ReadFile(input.Path)
 	if err != nil {
 		return nil, err
