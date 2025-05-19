@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/icholy/fuzzypatch"
 	"github.com/icholy/sloppy/internal/mcpx"
-	"github.com/icholy/sloppy/internal/patcher"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -56,7 +56,7 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
 		return nil, err
 	}
-	diffs, err := patcher.Parse(input.Diff)
+	diffs, err := fuzzypatch.Parse(input.Diff)
 	if err != nil {
 		return nil, err
 	}
@@ -65,15 +65,15 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 		return nil, err
 	}
 	src := string(data)
-	var edits []patcher.Edit
+	var edits []fuzzypatch.Edit
 	for _, d := range diffs {
-		e, ok := patcher.Search(src, d, ad.Threshold)
+		e, ok := fuzzypatch.Search(src, d, ad.Threshold)
 		if !ok {
 			return nil, fmt.Errorf("no match for search text: %s", d.Search)
 		}
 		edits = append(edits, e)
 	}
-	updated, err := patcher.Apply(src, edits)
+	updated, err := fuzzypatch.Apply(src, edits)
 	if err != nil {
 		return nil, err
 	}
