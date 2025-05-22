@@ -113,7 +113,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 		}
 	}
 	for _, b := range results {
-		if r := b.OfRequestToolResultBlock; r != nil && r.IsError.Value {
+		if r := b.OfToolResult; r != nil && r.IsError.Value {
 			for _, c := range r.Content {
 				var text string
 				if t := c.GetText(); t != nil {
@@ -131,7 +131,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 
 func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error) {
 	params := anthropic.MessageNewParams{
-		Model:     anthropic.ModelClaude3_7SonnetLatest,
+		Model:     anthropic.ModelClaudeSonnet4_20250514,
 		MaxTokens: 1024,
 		Messages:  a.messages,
 	}
