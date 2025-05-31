@@ -19,11 +19,9 @@ func main() {
 	var prompt string
 	var configPath string
 	var useBuiltin bool
-	var useV2ApplyDiff bool
 	flag.StringVar(&configPath, "config", "", "configuration file")
 	flag.BoolVar(&useBuiltin, "builtin", true, "use built-in tools")
 	flag.StringVar(&prompt, "prompt", "", "use this prompt and then exit")
-	flag.BoolVar(&useV2ApplyDiff, "apply_diff.v2", false, "use v2 of apply_diff tool")
 	flag.Parse()
 	var driver sloppy.Driver
 	ctx := context.Background()
@@ -40,9 +38,8 @@ func main() {
 	}
 	if useBuiltin {
 		tools := builtin.Tools("builtin",
-			// &builtin.RunAgent{Options: &opt},
 			&builtin.RunCommand{},
-			&builtin.ApplyDiff{Threshold: 0.9, V2: useV2ApplyDiff},
+			&builtin.ApplyDiff{Threshold: 0.9},
 			&builtin.WriteFile{},
 			&builtin.ReadFile{},
 		)
