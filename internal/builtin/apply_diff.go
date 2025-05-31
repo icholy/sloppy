@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -89,10 +88,10 @@ func (ad *ApplyDiff) HandleV2(_ context.Context, req mcp.CallToolRequest) (*mcp.
 		Line    float64 `param:"line,required"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to parse arguments", err), nil
 	}
 	if input.Search == "" {
-		return nil, fmt.Errorf("Search cannot be empty")
+		return mcp.NewToolResultError("search cannot be empty"), nil
 	}
 	diff := fuzzypatch.Diff{
 		Line:    int(input.Line),
@@ -101,19 +100,19 @@ func (ad *ApplyDiff) HandleV2(_ context.Context, req mcp.CallToolRequest) (*mcp.
 	}
 	data, err := os.ReadFile(input.Path)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to read file", err), nil
 	}
 	src := string(data)
 	edit, ok := fuzzypatch.Search(src, diff, ad.Threshold)
 	if !ok {
-		return nil, fmt.Errorf("no match for search text: %s", input.Search)
+		return mcpx.NewToolResultErrorf("no match for search text: %s", input.Search), nil
 	}
 	updated, err := fuzzypatch.Apply(src, []fuzzypatch.Edit{edit})
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to apply patch", err), nil
 	}
 	if err := os.WriteFile(input.Path, []byte(updated), 0644); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to write file", err), nil
 	}
 	return mcp.NewToolResultText("File updated"), nil
 }
@@ -124,25 +123,25 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 		Diff string `param:"diff,required"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to parse arguments", err), nil
 	}
 	diffs, err := fuzzypatch.Parse(input.Diff)
 	if err != nil {
 		return nil, err
 	}
 	if len(diffs) == 0 {
-		return nil, fmt.Errorf("no diffs were provided in the request")
+		return mcp.NewToolResultError("no diffs were provided in the request"), nil
 	}
 	data, err := os.ReadFile(input.Path)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to read file", err), nil
 	}
 	src := string(data)
 	var edits []fuzzypatch.Edit
 	for _, d := range diffs {
 		e, ok := fuzzypatch.Search(src, d, ad.Threshold)
 		if !ok {
-			return nil, fmt.Errorf("no match for search text: %s", d.Search)
+			return mcpx.NewToolResultErrorf("no match for search test: %s", d.Search), nil
 		}
 		edits = append(edits, e)
 	}
@@ -151,7 +150,7 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 		return nil, err
 	}
 	if err := os.WriteFile(input.Path, []byte(updated), 0644); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to write file", err), nil
 	}
 	return mcp.NewToolResultText("File updated"), nil
 }

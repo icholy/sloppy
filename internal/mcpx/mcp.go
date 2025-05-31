@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // MapArguments copies properties from args into v.
@@ -63,4 +65,10 @@ func MapArguments(args map[string]any, v any) error {
 		}
 	}
 	return nil
+}
+
+// NewToolResultErrorf returns a tool result error response
+// with the result of the args passed through fmt.Sprintf
+func NewToolResultErrorf(format string, a ...any) *mcp.CallToolResult {
+	return mcp.NewToolResultError(fmt.Sprintf(format, a...))
 }

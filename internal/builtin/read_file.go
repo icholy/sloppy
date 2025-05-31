@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -39,14 +38,14 @@ func (rf *ReadFile) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 		EndLine   float64 `param:"end_line"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to parse arguments", err), nil
 	}
 	if input.Path == "" {
-		return nil, fmt.Errorf("invalid input: path is required")
+		return mcp.NewToolResultError("invalid input: path is required"), nil
 	}
 	data, err := os.ReadFile(input.Path)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to read file", err), nil
 	}
 	lines := strings.SplitAfter(string(data), "\n")
 	nlines := len(lines)
@@ -59,7 +58,7 @@ func (rf *ReadFile) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 		end = int(input.EndLine) // use caller‑supplied value
 	}
 	if start < 1 || start > nlines || end < start || end > nlines {
-		return nil, fmt.Errorf("invalid line range %d–%d (file has %d lines)", start, end, nlines)
+		return mcpx.NewToolResultErrorf("invalid line range %d–%d (file has %d lines)", start, end, nlines), nil
 	}
 	content := strings.Join(lines[start-1:end], "")
 	return mcp.NewToolResultText(content), nil

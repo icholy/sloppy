@@ -70,7 +70,7 @@ func (ra *RunAgent) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 		Prompt string `param:"prompt,required"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
-		return nil, err
+		return mcpx.NewToolResultErrorf("failed to parse arguments", err), nil
 	}
 	a := ra.GetAgent(input.Name)
 	prompt := strings.Join([]string{

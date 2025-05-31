@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/icholy/sloppy/internal/mcpx"
@@ -35,13 +34,13 @@ func (wf *WriteFile) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		Content string `param:"content,required"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to parse arguments", err), nil
 	}
 	if input.Path == "" {
-		return nil, fmt.Errorf("invalid input: path is required")
+		return mcp.NewToolResultError("invalid input: path is required"), nil
 	}
 	if err := os.WriteFile(input.Path, []byte(input.Content), 0644); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to write file", err), nil
 	}
 	return mcp.NewToolResultText("File written"), nil
 }

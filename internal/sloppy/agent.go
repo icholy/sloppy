@@ -102,6 +102,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 	var results []anthropic.ContentBlockParamUnion
 	res, err := tool.Client.CallTool(ctx, req)
 	if err != nil {
+		// TODO: should we just pass this up?
 		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
 	} else {
 		for _, c := range res.Content {

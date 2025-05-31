@@ -3,8 +3,6 @@ package builtin
 import (
 	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -35,10 +33,10 @@ func (rc *RunCommand) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		Command string `param:"command,required"`
 	}
 	if err := mcpx.MapArguments(req.Params.Arguments, &input); err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to parse arguments", err), nil
 	}
 	if input.Command == "" {
-		return nil, errors.New("command cannot be empty")
+		return mcp.NewToolResultError("invalid arguments: command cannot be empty"), nil
 	}
 
 	cmd := exec.Command("bash", "-c", input.Command)
@@ -49,7 +47,7 @@ func (rc *RunCommand) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	cmd.Stdout = io.MultiWriter(os.Stdout, &output)
 	cmd.Stderr = io.MultiWriter(os.Stderr, &output)
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("%v: %s", err, output.String())
+		return mcpx.NewToolResultErrorf("%v: %s", err, output.String()), nil
 	}
 	return mcp.NewToolResultText(output.String()), nil
 }
