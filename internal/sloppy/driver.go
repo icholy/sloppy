@@ -44,6 +44,9 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 				CallToolResult: res,
 				Meta:           output.Meta,
 			}
+			for _, t := range d.Tools {
+				input.Tools = append(input.Tools, t.Tool)
+			}
 			continue
 		}
 		break
