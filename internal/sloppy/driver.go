@@ -8,7 +8,7 @@ import (
 )
 
 type AgentV2 interface {
-	RunV2(ctx context.Context, input *RunInput) (*RunOutput, error)
+	Run(ctx context.Context, input *RunInput) (*RunOutput, error)
 }
 
 type RunInput struct {
@@ -31,7 +31,7 @@ type Driver struct {
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	input := &RunInput{Prompt: prompt}
 	for {
-		output, err := d.Agent.RunV2(ctx, input)
+		output, err := d.Agent.Run(ctx, input)
 		if err != nil {
 			return err
 		}
