@@ -50,7 +50,8 @@ func main() {
 	}
 	agent := sloppy.New(opt)
 	if prompt != "" {
-		if err := agent.Run(ctx, prompt, true); err != nil {
+		input := &sloppy.RunInput{Prompt: prompt}
+		if _, err := agent.Run(ctx, input); err != nil {
 			log.Fatal(err)
 		}
 		return
@@ -78,7 +79,8 @@ func main() {
 			}
 			continue
 		}
-		if err := agent.Run(ctx, text, true); err != nil {
+		input := &sloppy.RunInput{Prompt: text}
+		if _, err := agent.Run(ctx, input); err != nil {
 			log.Fatal(err)
 		}
 	}

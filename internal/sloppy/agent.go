@@ -51,12 +51,21 @@ func New(opt Options) *Agent {
 	}
 }
 
-func (a *Agent) Run(ctx context.Context, input string, tools bool) error {
-	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input)))
+type RunInput struct {
+	Prompt         string
+	CallToolResult *mcp.CallToolResult
+}
+
+type RunOutput struct {
+	CallToolRequest *mcp.CallToolRequest
+}
+
+func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
+	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	for {
-		response, err := a.llm(ctx, tools)
+		response, err := a.llm(ctx, true)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		a.append(response.ToParam())
 		var results []anthropic.ContentBlockParamUnion
@@ -69,7 +78,7 @@ func (a *Agent) Run(ctx context.Context, input string, tools bool) error {
 			}
 		}
 		if len(results) == 0 {
-			return nil
+			return &RunOutput{}, nil
 		}
 		a.append(anthropic.NewUserMessage(results...))
 	}

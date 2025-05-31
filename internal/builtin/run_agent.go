@@ -74,11 +74,10 @@ func (ra *RunAgent) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 	}
 	a := ra.GetAgent(input.Name)
 	prompt := strings.Join([]string{
-		input.Prompt,
 		"Note: Only your final response message will be provided back to the user.",
 		"This last message should contain all of the relevant information.",
 	}, "\n\n")
-	if err := a.Run(ctx, prompt, true); err != nil {
+	if _, err := a.Run(ctx, &sloppy.RunInput{Prompt: prompt}); err != nil {
 		return nil, err
 	}
 	return mcp.NewToolResultText(a.LastMessageJSON()), nil
