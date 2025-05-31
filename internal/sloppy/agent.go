@@ -26,6 +26,7 @@ type Agent struct {
 	output   io.Writer
 	tools    map[string]Tool
 	messages []anthropic.MessageParam
+	pending  []anthropic.ContentBlockUnion
 }
 
 func New(opt Options) *Agent {
@@ -51,6 +52,15 @@ func New(opt Options) *Agent {
 	}
 }
 
+func (a *Agent) next() (anthropic.ContentBlockUnion, bool) {
+	if len(a.pending) == 0 {
+		return anthropic.ContentBlockUnion{}, false
+	}
+	block := a.pending[0]
+	a.pending = a.pending[1:]
+	return block, true
+}
+
 func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	for {
@@ -59,6 +69,7 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 			return nil, err
 		}
 		a.append(response.ToParam())
+		a.pending = response.Content
 		var results []anthropic.ContentBlockParamUnion
 		for _, block := range response.Content {
 			switch block.Type {
