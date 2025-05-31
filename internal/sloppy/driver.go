@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/icholy/sloppy/internal/mcpx"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -51,7 +52,26 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 
 			// we special case the run_agent tool
 			if req.Params.Name == "run_agent" {
-				panic("not implemented")
+				var args struct {
+					Prompt string `param:"prompt,required"`
+					Name   string `param:"name,required"`
+				}
+				if err := mcpx.MapArguments(req.Params.Arguments, &args); err != nil {
+					input = &RunInput{
+						Meta:           output.Meta,
+						CallToolResult: mcp.NewToolResultErrorFromErr("failed to parse arguments", err),
+					}
+					continue
+				}
+				d.Stack = append(d.Stack, NewAnthropicAgent(&AnthropicAgentOptions{Name: args.Name}))
+				input = &RunInput{
+					Meta: output.Meta,
+					Prompt: strings.Join([]string{
+						args.Prompt,
+						"Note: Only your final response message will be provided back to the user.",
+						"This last message should contain all of the relevant information.",
+					}, "\n\n"),
+				}
 			}
 
 			res, err := d.call(ctx, *req)
@@ -73,7 +93,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 				Meta:           map[string]any{}, // uh oh ...
 				CallToolResult: mcp.NewToolResultText(agent.LastMessage()),
 			}
-			d.Stack = slices.Delete(d.Stack, len(d.Stack)-1, len(d.Stack))
+			d.Stack = d.Stack[:len(d.Stack)-1]
 			continue
 		}
 
