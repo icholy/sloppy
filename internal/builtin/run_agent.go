@@ -12,7 +12,7 @@ import (
 )
 
 type RunAgent struct {
-	Options *sloppy.Options
+	Options *sloppy.AgentOptions
 	agents  map[string]*sloppy.Agent
 }
 

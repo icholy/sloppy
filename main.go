@@ -25,7 +25,7 @@ func main() {
 	flag.StringVar(&prompt, "prompt", "", "use this prompt and then exit")
 	flag.BoolVar(&useV2ApplyDiff, "apply_diff.v2", false, "use v2 of apply_diff tool")
 	flag.Parse()
-	var opt sloppy.Options
+	var opt sloppy.AgentOptions
 	ctx := context.Background()
 	if configPath != "" {
 		config, err := ReadConfig(configPath)
