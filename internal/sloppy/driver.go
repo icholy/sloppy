@@ -97,7 +97,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 		}
 
 		// are we in a nested agent ?
-		if len(d.Stack) > 0 {
+		if len(d.Stack) > 1 {
 			input = &RunInput{
 				Meta:           frame.Meta,
 				CallToolResult: mcp.NewToolResultText(agent.LastMessage()),
