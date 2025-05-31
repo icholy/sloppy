@@ -15,6 +15,7 @@ type RunInput struct {
 	Meta           map[string]any
 	Prompt         string
 	CallToolResult *mcp.CallToolResult
+	Tools          []mcp.Tool
 }
 
 type RunOutput struct {

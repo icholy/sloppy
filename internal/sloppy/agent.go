@@ -65,7 +65,7 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 		a.append(anthropic.NewUserMessage(results...))
 	}
 	if len(a.pending) == 0 {
-		response, err := a.llm(ctx, true)
+		response, err := a.llm(ctx, input.Tools)
 		if err != nil {
 			return nil, err
 		}
@@ -123,28 +123,26 @@ func (a *Agent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, 
 	return &req, nil
 }
 
-func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error) {
+func (a *Agent) llm(ctx context.Context, tools []mcp.Tool) (*anthropic.Message, error) {
 	params := anthropic.MessageNewParams{
 		Model:     anthropic.ModelClaudeSonnet4_20250514,
 		MaxTokens: 1024,
 		Messages:  a.messages,
 	}
-	if tools {
-		for _, tool := range a.tools {
-			params.Tools = append(params.Tools, anthropic.ToolUnionParam{
-				OfTool: &anthropic.ToolParam{
-					Name:        tool.Name,
-					Description: anthropic.String(tool.Tool.Description),
-					InputSchema: anthropic.ToolInputSchemaParam{
-						Type:       constant.Object(tool.Tool.InputSchema.Type),
-						Properties: tool.Tool.InputSchema.Properties,
-						ExtraFields: map[string]any{
-							"required": tool.Tool.InputSchema.Required,
-						},
+	for _, tool := range tools {
+		params.Tools = append(params.Tools, anthropic.ToolUnionParam{
+			OfTool: &anthropic.ToolParam{
+				Name:        tool.Name,
+				Description: anthropic.String(tool.Description),
+				InputSchema: anthropic.ToolInputSchemaParam{
+					Type:       constant.Object(tool.InputSchema.Type),
+					Properties: tool.InputSchema.Properties,
+					ExtraFields: map[string]any{
+						"required": tool.InputSchema.Required,
 					},
 				},
-			})
-		}
+			},
+		})
 	}
 	return a.client.Messages.New(ctx, params)
 }
