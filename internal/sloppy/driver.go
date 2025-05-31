@@ -92,8 +92,6 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			if err != nil {
 				return err
 			}
-			data, _ = json.MarshalIndent(res, "", "  ")
-			fmt.Printf("output: %s\n", data)
 			input = &RunInput{
 				CallToolResult: res,
 				Meta:           output.Meta,
