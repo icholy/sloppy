@@ -49,10 +49,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			}
 			data, _ = json.MarshalIndent(res, "", "  ")
 			fmt.Printf("output: %s\n", data)
-			input = &RunInput{
-				CallToolResult: res,
-				Meta:           output.Meta,
-			}
+			input = &RunInput{CallToolResult: res, Meta: output.Meta}
 			for _, t := range d.Tools {
 				input.Tools = append(input.Tools, t.Tool)
 			}
