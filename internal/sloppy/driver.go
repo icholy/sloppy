@@ -8,18 +8,18 @@ import (
 )
 
 type AgentV2 interface {
-	Run(ctx context.Context, input *RunInput) (*RunOutput, error)
+	RunV2(ctx context.Context, input *RunInput) (*RunOutput, error)
 }
 
 type Driver struct {
-	tools map[string]Tool
-	agent AgentV2
+	Tools map[string]Tool
+	Agent AgentV2
 }
 
 func (d *Driver) Run(ctx context.Context, prompt string) error {
 	input := &RunInput{Prompt: prompt}
 	for {
-		output, err := d.agent.Run(ctx, input)
+		output, err := d.Agent.RunV2(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -37,7 +37,7 @@ func (d *Driver) Run(ctx context.Context, prompt string) error {
 }
 
 func (d *Driver) call(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	tool, ok := d.tools[req.Method]
+	tool, ok := d.Tools[req.Method]
 	if !ok {
 		return mcpx.NewToolResultErrorf("tool not found: %q", req.Method), nil
 	}
