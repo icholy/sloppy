@@ -61,7 +61,7 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 		if !ok {
 			return nil, fmt.Errorf("missing toolUseId in metadata")
 		}
-		results := a.toAnthropicToolResults(toolUseID, res)
+		results := a.toAnthropic(toolUseID, res)
 		a.append(anthropic.NewUserMessage(results...))
 	}
 	if len(a.pending) == 0 {
@@ -79,7 +79,7 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 		case "text":
 			fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text(a.name, termcolor.Yellow), block.Text)
 		case "tool_use":
-			req, err := a.toMCPToolRequest(block)
+			req, err := a.toMCP(block)
 			if err != nil {
 				return nil, err
 			}
@@ -101,19 +101,20 @@ func (a *Agent) LastMessageJSON() string {
 	return string(data)
 }
 
-func (a *Agent) toAnthropicToolResults(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
+func (a *Agent) toAnthropic(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
 	var results []anthropic.ContentBlockParamUnion
 	for _, c := range res.Content {
 		if text, ok := c.(mcp.TextContent); ok {
 			results = append(results, anthropic.NewToolResultBlock(toolUseID, text.Text, res.IsError))
 		} else {
+			// TODO: figure out what to do here
 			results = append(results, anthropic.NewToolResultBlock(toolUseID, "unsupported response type", true))
 		}
 	}
 	return results
 }
 
-func (a *Agent) toMCPToolRequest(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, error) {
+func (a *Agent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, error) {
 	var req mcp.CallToolRequest
 	req.Params.Name = block.Name
 	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
