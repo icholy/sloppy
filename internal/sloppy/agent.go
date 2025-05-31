@@ -17,14 +17,12 @@ type Options struct {
 	Name   string
 	Client *anthropic.Client
 	Output io.Writer
-	Tools  []Tool
 }
 
 type Agent struct {
 	name     string
 	client   *anthropic.Client
 	output   io.Writer
-	tools    map[string]Tool
 	messages []anthropic.MessageParam
 	pending  []anthropic.ContentBlockUnion
 }
@@ -40,15 +38,10 @@ func New(opt Options) *Agent {
 	if opt.Output == nil {
 		opt.Output = os.Stdout
 	}
-	tools := map[string]Tool{}
-	for _, tool := range opt.Tools {
-		tools[tool.Name] = tool
-	}
 	return &Agent{
 		name:   opt.Name,
 		client: opt.Client,
 		output: opt.Output,
-		tools:  tools,
 	}
 }
 
