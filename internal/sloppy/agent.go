@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-type Options struct {
+type AgentOptions struct {
 	Name   string
 	Client *anthropic.Client
 	Output io.Writer
@@ -27,7 +27,7 @@ type Agent struct {
 	pending  []anthropic.ContentBlockUnion
 }
 
-func New(opt Options) *Agent {
+func New(opt AgentOptions) *Agent {
 	if opt.Name == "" {
 		opt.Name = "Sloppy"
 	}
