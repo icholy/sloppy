@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/icholy/sloppy/internal/mcpx"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -11,6 +12,7 @@ import (
 
 type Agent interface {
 	Run(ctx context.Context, input *RunInput) (*RunOutput, error)
+	LastMessage() string
 }
 
 type RunInput struct {
@@ -26,18 +28,20 @@ type RunOutput struct {
 }
 
 type Driver struct {
-	Agent Agent
+	Root  Agent
 	Tools []Tool
 	Stack []Agent
 }
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
-	input := &RunInput{
-		Prompt: prompt,
-		Tools:  d.tools(),
+	if len(d.Stack) == 0 {
+		d.Stack = append(d.Stack, d.Root)
 	}
+	input := &RunInput{Prompt: prompt}
 	for {
-		output, err := d.Agent.Run(ctx, input)
+		agent := d.Stack[len(d.Stack)-1]
+		input.Tools = d.tools()
+		output, err := agent.Run(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -59,10 +63,20 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			input = &RunInput{
 				CallToolResult: res,
 				Meta:           output.Meta,
-				Tools:          d.tools(),
 			}
 			continue
 		}
+
+		// are we in a nested agent ?
+		if len(d.Stack) > 0 {
+			input = &RunInput{
+				Meta:           map[string]any{}, // uh oh ...
+				CallToolResult: mcp.NewToolResultText(agent.LastMessage()),
+			}
+			d.Stack = slices.Delete(d.Stack, len(d.Stack)-1, len(d.Stack))
+			continue
+		}
+
 		break
 	}
 	return nil

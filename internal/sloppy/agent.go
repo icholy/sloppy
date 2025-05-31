@@ -88,7 +88,7 @@ func (a *AnthropicAgent) Run(ctx context.Context, input *RunInput) (*RunOutput, 
 	return &RunOutput{}, nil
 }
 
-func (a *AnthropicAgent) LastMessageJSON() string {
+func (a *AnthropicAgent) LastMessage() string {
 	if len(a.messages) == 0 {
 		return ""
 	}
