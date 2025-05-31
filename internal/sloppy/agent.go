@@ -96,6 +96,15 @@ func (a *Agent) toAnthropicToolResult(toolUseID string, res *mcp.CallToolResult)
 	return results
 }
 
+func (a *Agent) toMCPToolRequest(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, error) {
+	var req mcp.CallToolRequest
+	req.Params.Name = block.Name
+	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
+		return nil, err
+	}
+	return &req, nil
+}
+
 func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []anthropic.ContentBlockParamUnion {
 	tool, ok := a.tools[block.Name]
 	if !ok {
@@ -104,15 +113,14 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 		}
 	}
 	fmt.Fprintf(a.output, "%s: %s(%s)\n", termcolor.Text("tool", termcolor.Green), block.Name, block.Input)
-	var req mcp.CallToolRequest
-	req.Params.Name = tool.Tool.Name
-	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
+	req, err := a.toMCPToolRequest(block)
+	if err != nil {
 		return []anthropic.ContentBlockParamUnion{
 			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
 		}
 	}
 	var results []anthropic.ContentBlockParamUnion
-	res, err := tool.Client.CallTool(ctx, req)
+	res, err := tool.Client.CallTool(ctx, *req)
 	if err != nil {
 		// TODO: should we just pass this up?
 		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
