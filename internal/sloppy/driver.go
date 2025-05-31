@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/icholy/sloppy/internal/mcpx"
@@ -107,7 +106,34 @@ func (d *Driver) tools() []mcp.Tool {
 	for _, t := range d.Tools {
 		tools = append(tools, t.ToAlias())
 	}
-	return tools
+	return append(tools, mcp.NewTool("run_agent",
+		mcp.WithDescription(strings.Join([]string{
+			"Run a child agent to execute a sub-task.",
+			"You are responsible for planning, breaking down the work, and sequencing.",
+			"Do not delegate the entire task to another agent.",
+			"You are still the executor, complete the core task yourself.",
+			"You MUST HAVE AT LEAST 3 instances of the same template task to use an agent",
+			"Create a SEPARATE agent for EACH INSTNACE of a repetaive tasks.",
+			"Each SUB-TASK should have a SEPARATELY NAMED agent.",
+			"Create NEW AGENTS FOR EACH NEW SUB-TASK.",
+			"Do NOT re-use the same agent for multiple tasks.",
+			"ONLY re-use agents to ask for corrections or follow up questions to THEIR SPECIFIC TASK.",
+		}, " ")),
+		mcp.WithString("name",
+			mcp.Required(),
+			mcp.Description(strings.Join([]string{
+				"A unique name to identify an agent instance.",
+				"This name should be short and descriptive.",
+			}, " ")),
+		),
+		mcp.WithString("prompt",
+			mcp.Required(),
+			mcp.Description(strings.Join([]string{
+				"Instructions for the agent.",
+				"Or follow up questions for an agent previously interacted with.",
+			}, " ")),
+		),
+	))
 }
 
 func (d *Driver) call(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
