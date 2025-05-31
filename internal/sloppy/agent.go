@@ -84,6 +84,18 @@ func (a *Agent) LastMessageJSON() string {
 	return string(data)
 }
 
+func (a *Agent) toToolResultBlocks(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
+	var results []anthropic.ContentBlockParamUnion
+	for _, c := range res.Content {
+		if text, ok := c.(mcp.TextContent); ok {
+			results = append(results, anthropic.NewToolResultBlock(toolUseID, text.Text, res.IsError))
+		} else {
+			results = append(results, anthropic.NewToolResultBlock(toolUseID, "unsupported response type", true))
+		}
+	}
+	return results
+}
+
 func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []anthropic.ContentBlockParamUnion {
 	tool, ok := a.tools[block.Name]
 	if !ok {
@@ -105,13 +117,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 		// TODO: should we just pass this up?
 		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
 	} else {
-		for _, c := range res.Content {
-			if text, ok := c.(mcp.TextContent); ok {
-				results = append(results, anthropic.NewToolResultBlock(block.ID, text.Text, res.IsError))
-			} else {
-				results = append(results, anthropic.NewToolResultBlock(block.ID, "unsupported response type", true))
-			}
-		}
+		results = a.toToolResultBlocks(block.ID, res)
 	}
 	for _, b := range results {
 		if r := b.OfToolResult; r != nil && r.IsError.Value {
