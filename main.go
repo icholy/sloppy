@@ -45,7 +45,11 @@ func main() {
 		)
 		driver.Tools = append(driver.Tools, tools...)
 	}
-	driver.Root = sloppy.NewAnthropicAgent(nil)
+	driver.NewAgent = func(name string) sloppy.Agent {
+		return sloppy.NewAnthropicAgent(&sloppy.AnthropicAgentOptions{
+			Name: name,
+		})
+	}
 	if prompt != "" {
 		if err := driver.Loop(ctx, prompt); err != nil {
 			log.Fatal(err)

@@ -33,14 +33,18 @@ type Frame struct {
 }
 
 type Driver struct {
-	Root  Agent
-	Tools []Tool
-	Stack []Frame
+	Tools    []Tool
+	Stack    []Frame
+	NewAgent func(name string) Agent
+}
+
+func (d *Driver) Start() {
+
 }
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	if len(d.Stack) == 0 {
-		d.Stack = append(d.Stack, Frame{Agent: d.Root})
+		d.Stack = append(d.Stack, Frame{Agent: d.NewAgent("")})
 	}
 	input := &RunInput{Prompt: prompt}
 	for {
@@ -70,7 +74,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 				}
 				d.Stack = append(d.Stack, Frame{
 					Meta:  output.Meta,
-					Agent: NewAnthropicAgent(&AnthropicAgentOptions{Name: args.Name}),
+					Agent: d.NewAgent(args.Name),
 				})
 				input = &RunInput{
 					Meta: output.Meta,
