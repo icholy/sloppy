@@ -30,6 +30,9 @@ type Driver struct {
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	input := &RunInput{Prompt: prompt}
+	for _, t := range d.Tools {
+		input.Tools = append(input.Tools, t.Tool)
+	}
 	for {
 		output, err := d.Agent.Run(ctx, input)
 		if err != nil {
