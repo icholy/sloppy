@@ -33,7 +33,10 @@ type Driver struct {
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	input := &RunInput{Prompt: prompt}
 	for _, t := range d.Tools {
-		input.Tools = append(input.Tools, t.Tool)
+		// TODO: this is a hack, find a clean way of handling tool namespacing
+		tool := t.Tool
+		tool.Name = t.Name
+		input.Tools = append(input.Tools, tool)
 	}
 	for {
 		output, err := d.Agent.Run(ctx, input)
@@ -51,7 +54,10 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			fmt.Printf("output: %s\n", data)
 			input = &RunInput{CallToolResult: res, Meta: output.Meta}
 			for _, t := range d.Tools {
-				input.Tools = append(input.Tools, t.Tool)
+				// TODO: this is a hack, find a clean way of handling tool namespacing
+				tool := t.Tool
+				tool.Name = t.Name
+				input.Tools = append(input.Tools, tool)
 			}
 			continue
 		}
@@ -67,10 +73,13 @@ func (d *Driver) call(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallTo
 		if t.Name == req.Params.Name {
 			found = true
 			tool = t
+			break
 		}
 	}
 	if !found {
 		return mcpx.NewToolResultErrorf("tool not found: %q", req.Params.Name), nil
 	}
+	// TODO: this is a hack, find a clean way to handle tool namespacing
+	req.Params.Name = tool.Tool.Name
 	return tool.Client.CallTool(ctx, req)
 }
