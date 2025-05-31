@@ -51,15 +51,6 @@ func New(opt Options) *Agent {
 	}
 }
 
-type RunInput struct {
-	Prompt         string
-	CallToolResult *mcp.CallToolResult
-}
-
-type RunOutput struct {
-	CallToolRequest *mcp.CallToolRequest
-}
-
 func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	for {

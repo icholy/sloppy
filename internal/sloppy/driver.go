@@ -11,6 +11,15 @@ type AgentV2 interface {
 	RunV2(ctx context.Context, input *RunInput) (*RunOutput, error)
 }
 
+type RunInput struct {
+	Prompt         string
+	CallToolResult *mcp.CallToolResult
+}
+
+type RunOutput struct {
+	CallToolRequest *mcp.CallToolRequest
+}
+
 type Driver struct {
 	Tools map[string]Tool
 	Agent AgentV2
