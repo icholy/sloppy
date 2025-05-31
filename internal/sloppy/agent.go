@@ -13,22 +13,24 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-type Options struct {
+type AnthropicAgentOptions struct {
 	Name   string
 	Client *anthropic.Client
 	Output io.Writer
-	Tools  []Tool
 }
 
-type Agent struct {
+type AnthropicAgent struct {
 	name     string
 	client   *anthropic.Client
 	output   io.Writer
-	tools    map[string]Tool
 	messages []anthropic.MessageParam
+	pending  []anthropic.ContentBlockUnion
 }
 
-func New(opt Options) *Agent {
+func NewAnthropicAgent(opt *AnthropicAgentOptions) *AnthropicAgent {
+	if opt == nil {
+		opt = &AnthropicAgentOptions{}
+	}
 	if opt.Name == "" {
 		opt.Name = "Sloppy"
 	}
@@ -39,43 +41,54 @@ func New(opt Options) *Agent {
 	if opt.Output == nil {
 		opt.Output = os.Stdout
 	}
-	tools := map[string]Tool{}
-	for _, tool := range opt.Tools {
-		tools[tool.Name] = tool
-	}
-	return &Agent{
+	return &AnthropicAgent{
 		name:   opt.Name,
 		client: opt.Client,
 		output: opt.Output,
-		tools:  tools,
 	}
 }
 
-func (a *Agent) Run(ctx context.Context, input string, tools bool) error {
-	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input)))
-	for {
-		response, err := a.llm(ctx, tools)
-		if err != nil {
-			return err
+func (a *AnthropicAgent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
+	if input.Prompt != "" {
+		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
+	}
+	if res := input.CallToolResult; res != nil {
+		toolUseID, ok := input.Meta["toolUseID"].(string)
+		if !ok {
+			return nil, fmt.Errorf("missing toolUseId in metadata")
 		}
-		a.append(response.ToParam())
-		var results []anthropic.ContentBlockParamUnion
-		for _, block := range response.Content {
-			switch block.Type {
-			case "text":
-				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text(a.name, termcolor.Yellow), block.Text)
-			case "tool_use":
-				results = append(results, a.tool(ctx, block)...)
-			}
-		}
-		if len(results) == 0 {
-			return nil
-		}
+		results := a.toAnthropic(toolUseID, res)
 		a.append(anthropic.NewUserMessage(results...))
 	}
+	if len(a.pending) == 0 {
+		response, err := a.llm(ctx, input.Tools)
+		if err != nil {
+			return nil, err
+		}
+		a.append(response.ToParam())
+		a.pending = response.Content
+	}
+	for len(a.pending) > 0 {
+		block := a.pending[0]
+		a.pending = a.pending[1:]
+		switch block.Type {
+		case "text":
+			fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text(a.name, termcolor.Yellow), block.Text)
+		case "tool_use":
+			req, err := a.toMCP(block)
+			if err != nil {
+				return nil, err
+			}
+			return &RunOutput{
+				CallToolRequest: req,
+				Meta:            map[string]any{"toolUseID": block.ID},
+			}, nil
+		}
+	}
+	return &RunOutput{}, nil
 }
 
-func (a *Agent) LastMessageJSON() string {
+func (a *AnthropicAgent) LastMessage() string {
 	if len(a.messages) == 0 {
 		return ""
 	}
@@ -84,78 +97,52 @@ func (a *Agent) LastMessageJSON() string {
 	return string(data)
 }
 
-func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []anthropic.ContentBlockParamUnion {
-	tool, ok := a.tools[block.Name]
-	if !ok {
-		return []anthropic.ContentBlockParamUnion{
-			anthropic.NewToolResultBlock(block.ID, "tool not found", true),
-		}
-	}
-	fmt.Fprintf(a.output, "%s: %s(%s)\n", termcolor.Text("tool", termcolor.Green), block.Name, block.Input)
-	var req mcp.CallToolRequest
-	req.Params.Name = tool.Tool.Name
-	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
-		return []anthropic.ContentBlockParamUnion{
-			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
-		}
-	}
+func (a *AnthropicAgent) toAnthropic(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
 	var results []anthropic.ContentBlockParamUnion
-	res, err := tool.Client.CallTool(ctx, req)
-	if err != nil {
-		// TODO: should we just pass this up?
-		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
-	} else {
-		for _, c := range res.Content {
-			if text, ok := c.(mcp.TextContent); ok {
-				results = append(results, anthropic.NewToolResultBlock(block.ID, text.Text, res.IsError))
-			} else {
-				results = append(results, anthropic.NewToolResultBlock(block.ID, "unsupported response type", true))
-			}
-		}
-	}
-	for _, b := range results {
-		if r := b.OfToolResult; r != nil && r.IsError.Value {
-			for _, c := range r.Content {
-				var text string
-				if t := c.GetText(); t != nil {
-					text = *t
-				} else {
-					data, _ := r.MarshalJSON()
-					text = string(data)
-				}
-				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text("error", termcolor.Red), text)
-			}
+	for _, c := range res.Content {
+		if text, ok := c.(mcp.TextContent); ok {
+			results = append(results, anthropic.NewToolResultBlock(toolUseID, text.Text, res.IsError))
+		} else {
+			// TODO: figure out what to do here
+			results = append(results, anthropic.NewToolResultBlock(toolUseID, "unsupported response type", true))
 		}
 	}
 	return results
 }
 
-func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error) {
+func (a *AnthropicAgent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, error) {
+	var req mcp.CallToolRequest
+	req.Params.Name = block.Name
+	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
+		return nil, err
+	}
+	return &req, nil
+}
+
+func (a *AnthropicAgent) llm(ctx context.Context, tools []mcp.Tool) (*anthropic.Message, error) {
 	params := anthropic.MessageNewParams{
 		Model:     anthropic.ModelClaudeSonnet4_20250514,
 		MaxTokens: 1024,
 		Messages:  a.messages,
 	}
-	if tools {
-		for _, tool := range a.tools {
-			params.Tools = append(params.Tools, anthropic.ToolUnionParam{
-				OfTool: &anthropic.ToolParam{
-					Name:        tool.Name,
-					Description: anthropic.String(tool.Tool.Description),
-					InputSchema: anthropic.ToolInputSchemaParam{
-						Type:       constant.Object(tool.Tool.InputSchema.Type),
-						Properties: tool.Tool.InputSchema.Properties,
-						ExtraFields: map[string]any{
-							"required": tool.Tool.InputSchema.Required,
-						},
+	for _, tool := range tools {
+		params.Tools = append(params.Tools, anthropic.ToolUnionParam{
+			OfTool: &anthropic.ToolParam{
+				Name:        tool.Name,
+				Description: anthropic.String(tool.Description),
+				InputSchema: anthropic.ToolInputSchemaParam{
+					Type:       constant.Object(tool.InputSchema.Type),
+					Properties: tool.InputSchema.Properties,
+					ExtraFields: map[string]any{
+						"required": tool.InputSchema.Required,
 					},
 				},
-			})
-		}
+			},
+		})
 	}
 	return a.client.Messages.New(ctx, params)
 }
 
-func (a *Agent) append(m anthropic.MessageParam) {
+func (a *AnthropicAgent) append(m anthropic.MessageParam) {
 	a.messages = append(a.messages, m)
 }

@@ -25,7 +25,7 @@ func main() {
 	flag.StringVar(&prompt, "prompt", "", "use this prompt and then exit")
 	flag.BoolVar(&useV2ApplyDiff, "apply_diff.v2", false, "use v2 of apply_diff tool")
 	flag.Parse()
-	var opt sloppy.Options
+	var driver sloppy.Driver
 	ctx := context.Background()
 	if configPath != "" {
 		config, err := ReadConfig(configPath)
@@ -36,21 +36,21 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		opt.Tools = append(opt.Tools, tools...)
+		driver.Tools = append(driver.Tools, tools...)
 	}
 	if useBuiltin {
 		tools := builtin.Tools("builtin",
-			&builtin.RunAgent{Options: &opt},
+			// &builtin.RunAgent{Options: &opt},
 			&builtin.RunCommand{},
 			&builtin.ApplyDiff{Threshold: 0.9, V2: useV2ApplyDiff},
 			&builtin.WriteFile{},
 			&builtin.ReadFile{},
 		)
-		opt.Tools = append(opt.Tools, tools...)
+		driver.Tools = append(driver.Tools, tools...)
 	}
-	agent := sloppy.New(opt)
+	driver.Root = sloppy.NewAnthropicAgent(nil)
 	if prompt != "" {
-		if err := agent.Run(ctx, prompt, true); err != nil {
+		if err := driver.Loop(ctx, prompt); err != nil {
 			log.Fatal(err)
 		}
 		return
@@ -65,20 +65,20 @@ func main() {
 		text := scanner.Text()
 		switch strings.TrimSpace(text) {
 		case "/tools":
-			for i, t := range opt.Tools {
+			for i, t := range driver.Tools {
 				if i > 0 {
 					fmt.Println()
 				}
 				data, _ := json.MarshalIndent(t.Tool.InputSchema, "", "  ")
 				fmt.Printf("Tool: %s\nDescription: %s\nSchema: %s\n",
-					t.Name,
+					t.Alias,
 					t.Tool.Description,
 					data,
 				)
 			}
 			continue
 		}
-		if err := agent.Run(ctx, text, true); err != nil {
+		if err := driver.Loop(ctx, text); err != nil {
 			log.Fatal(err)
 		}
 	}
