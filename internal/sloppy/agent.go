@@ -73,8 +73,6 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 		results := a.toAnthropicToolResults(toolUseID, res)
 		a.append(anthropic.NewUserMessage(results...))
 	}
-
-	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	for {
 		response, err := a.llm(ctx, true)
 		if err != nil {
