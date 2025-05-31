@@ -9,7 +9,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-type AgentV2 interface {
+type Agent interface {
 	Run(ctx context.Context, input *RunInput) (*RunOutput, error)
 }
 
@@ -26,7 +26,7 @@ type RunOutput struct {
 }
 
 type Driver struct {
-	Agent AgentV2
+	Agent Agent
 	Tools []Tool
 }
 
