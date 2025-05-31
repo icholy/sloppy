@@ -62,6 +62,16 @@ func (a *Agent) next() (anthropic.ContentBlockUnion, bool) {
 }
 
 func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
+	if input.Prompt != "" {
+		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
+	}
+	if res := input.CallToolResult; res != nil {
+		// TODO: how do we get the call id here?
+		// need some way to pass around metadata
+		results := a.toAnthropicToolResults("", res)
+		a.append(anthropic.NewUserMessage(results...))
+	}
+
 	a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	for {
 		response, err := a.llm(ctx, true)
@@ -95,7 +105,7 @@ func (a *Agent) LastMessageJSON() string {
 	return string(data)
 }
 
-func (a *Agent) toAnthropicToolResult(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
+func (a *Agent) toAnthropicToolResults(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
 	var results []anthropic.ContentBlockParamUnion
 	for _, c := range res.Content {
 		if text, ok := c.(mcp.TextContent); ok {
@@ -136,7 +146,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 		// TODO: should we just pass this up?
 		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
 	} else {
-		results = a.toAnthropicToolResult(block.ID, res)
+		results = a.toAnthropicToolResults(block.ID, res)
 	}
 	for _, b := range results {
 		if r := b.OfToolResult; r != nil && r.IsError.Value {
