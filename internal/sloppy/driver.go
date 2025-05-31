@@ -80,6 +80,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 						"This last message should contain all of the relevant information.",
 					}, "\n\n"),
 				}
+				continue
 			}
 
 			res, err := d.call(ctx, *req)
