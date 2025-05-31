@@ -40,7 +40,7 @@ func main() {
 	}
 	if useBuiltin {
 		tools := builtin.Tools("builtin",
-			&builtin.RunAgent{Options: &opt},
+			// &builtin.RunAgent{Options: &opt},
 			&builtin.RunCommand{},
 			&builtin.ApplyDiff{Threshold: 0.9, V2: useV2ApplyDiff},
 			&builtin.WriteFile{},
