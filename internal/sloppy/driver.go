@@ -27,19 +27,25 @@ type RunOutput struct {
 	CallToolRequest *mcp.CallToolRequest
 }
 
+type Frame struct {
+	Meta  map[string]any
+	Agent Agent
+}
+
 type Driver struct {
 	Root  Agent
 	Tools []Tool
-	Stack []Agent
+	Stack []Frame
 }
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	if len(d.Stack) == 0 {
-		d.Stack = append(d.Stack, d.Root)
+		d.Stack = append(d.Stack, Frame{Agent: d.Root})
 	}
 	input := &RunInput{Prompt: prompt}
 	for {
-		agent := d.Stack[len(d.Stack)-1]
+		frame := d.Stack[len(d.Stack)-1]
+		agent := frame.Agent
 		input.Tools = d.tools()
 		output, err := agent.Run(ctx, input)
 		if err != nil {
@@ -62,7 +68,10 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 					}
 					continue
 				}
-				d.Stack = append(d.Stack, NewAnthropicAgent(&AnthropicAgentOptions{Name: args.Name}))
+				d.Stack = append(d.Stack, Frame{
+					Meta:  output.Meta,
+					Agent: NewAnthropicAgent(&AnthropicAgentOptions{Name: args.Name}),
+				})
 				input = &RunInput{
 					Meta: output.Meta,
 					Prompt: strings.Join([]string{
@@ -89,7 +98,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 		// are we in a nested agent ?
 		if len(d.Stack) > 0 {
 			input = &RunInput{
-				Meta:           map[string]any{}, // uh oh ...
+				Meta:           frame.Meta,
 				CallToolResult: mcp.NewToolResultText(agent.LastMessage()),
 			}
 			d.Stack = d.Stack[:len(d.Stack)-1]
