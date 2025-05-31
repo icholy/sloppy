@@ -31,9 +31,9 @@ type Driver struct {
 }
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
-	input := &RunInput{Prompt: prompt}
-	for _, t := range d.Tools {
-		input.Tools = append(input.Tools, t.ToAlias())
+	input := &RunInput{
+		Prompt: prompt,
+		Tools:  d.tools(),
 	}
 	for {
 		output, err := d.Agent.Run(ctx, input)
@@ -49,15 +49,24 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			}
 			data, _ = json.MarshalIndent(res, "", "  ")
 			fmt.Printf("output: %s\n", data)
-			input = &RunInput{CallToolResult: res, Meta: output.Meta}
-			for _, t := range d.Tools {
-				input.Tools = append(input.Tools, t.ToAlias())
+			input = &RunInput{
+				CallToolResult: res,
+				Meta:           output.Meta,
+				Tools:          d.tools(),
 			}
 			continue
 		}
 		break
 	}
 	return nil
+}
+
+func (d *Driver) tools() []mcp.Tool {
+	var tools []mcp.Tool
+	for _, t := range d.Tools {
+		tools = append(tools, t.ToAlias())
+	}
+	return tools
 }
 
 func (d *Driver) call(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
