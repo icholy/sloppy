@@ -9,9 +9,15 @@ import (
 )
 
 type Tool struct {
-	Name   string
+	Alias  string
 	Tool   mcp.Tool
 	Client *client.Client
+}
+
+func (t Tool) ToAlias() mcp.Tool {
+	tool := t.Tool
+	tool.Name = t.Alias
+	return tool
 }
 
 func ListClientTools(ctx context.Context, name string, c *client.Client) ([]Tool, error) {
@@ -22,7 +28,7 @@ func ListClientTools(ctx context.Context, name string, c *client.Client) ([]Tool
 	}
 	for _, t := range res.Tools {
 		tools = append(tools, Tool{
-			Name:   fmt.Sprintf("%s-%s", name, t.Name),
+			Alias:  fmt.Sprintf("%s-%s", name, t.Name),
 			Tool:   t,
 			Client: c,
 		})

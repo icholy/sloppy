@@ -71,7 +71,7 @@ func main() {
 				}
 				data, _ := json.MarshalIndent(t.Tool.InputSchema, "", "  ")
 				fmt.Printf("Tool: %s\nDescription: %s\nSchema: %s\n",
-					t.Name,
+					t.Alias,
 					t.Tool.Description,
 					data,
 				)
