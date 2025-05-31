@@ -66,9 +66,11 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	}
 	if res := input.CallToolResult; res != nil {
-		// TODO: how do we get the call id here?
-		// need some way to pass around metadata
-		results := a.toAnthropicToolResults("", res)
+		toolUseID, ok := input.Meta["toolUseID"].(string)
+		if !ok {
+			return nil, fmt.Errorf("missing toolUseId in metadata")
+		}
+		results := a.toAnthropicToolResults(toolUseID, res)
 		a.append(anthropic.NewUserMessage(results...))
 	}
 
