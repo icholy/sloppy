@@ -12,11 +12,13 @@ type AgentV2 interface {
 }
 
 type RunInput struct {
+	Meta           map[string]any
 	Prompt         string
 	CallToolResult *mcp.CallToolResult
 }
 
 type RunOutput struct {
+	Meta            map[string]any
 	CallToolRequest *mcp.CallToolRequest
 }
 
@@ -37,7 +39,10 @@ func (d *Driver) Run(ctx context.Context, prompt string) error {
 			if err != nil {
 				return err
 			}
-			input = &RunInput{CallToolResult: res}
+			input = &RunInput{
+				CallToolResult: res,
+				Meta:           output.Meta,
+			}
 			continue
 		}
 		break
