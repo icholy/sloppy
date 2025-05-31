@@ -52,15 +52,6 @@ func New(opt Options) *Agent {
 	}
 }
 
-func (a *Agent) next() (anthropic.ContentBlockUnion, bool) {
-	if len(a.pending) == 0 {
-		return anthropic.ContentBlockUnion{}, false
-	}
-	block := a.pending[0]
-	a.pending = a.pending[1:]
-	return block, true
-}
-
 func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 	if input.Prompt != "" {
 		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
@@ -129,45 +120,6 @@ func (a *Agent) toMCPToolRequest(block anthropic.ContentBlockUnion) (*mcp.CallTo
 		return nil, err
 	}
 	return &req, nil
-}
-
-func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []anthropic.ContentBlockParamUnion {
-	tool, ok := a.tools[block.Name]
-	if !ok {
-		return []anthropic.ContentBlockParamUnion{
-			anthropic.NewToolResultBlock(block.ID, "tool not found", true),
-		}
-	}
-	fmt.Fprintf(a.output, "%s: %s(%s)\n", termcolor.Text("tool", termcolor.Green), block.Name, block.Input)
-	req, err := a.toMCPToolRequest(block)
-	if err != nil {
-		return []anthropic.ContentBlockParamUnion{
-			anthropic.NewToolResultBlock(block.ID, err.Error(), true),
-		}
-	}
-	var results []anthropic.ContentBlockParamUnion
-	res, err := tool.Client.CallTool(ctx, *req)
-	if err != nil {
-		// TODO: should we just pass this up?
-		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
-	} else {
-		results = a.toAnthropicToolResults(block.ID, res)
-	}
-	for _, b := range results {
-		if r := b.OfToolResult; r != nil && r.IsError.Value {
-			for _, c := range r.Content {
-				var text string
-				if t := c.GetText(); t != nil {
-					text = *t
-				} else {
-					data, _ := r.MarshalJSON()
-					text = string(data)
-				}
-				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text("error", termcolor.Red), text)
-			}
-		}
-	}
-	return results
 }
 
 func (a *Agent) llm(ctx context.Context, tools bool) (*anthropic.Message, error) {
