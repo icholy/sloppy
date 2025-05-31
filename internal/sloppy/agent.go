@@ -73,27 +73,32 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 		results := a.toAnthropicToolResults(toolUseID, res)
 		a.append(anthropic.NewUserMessage(results...))
 	}
-	for {
+	if len(a.pending) == 0 {
 		response, err := a.llm(ctx, true)
 		if err != nil {
 			return nil, err
 		}
 		a.append(response.ToParam())
 		a.pending = response.Content
-		var results []anthropic.ContentBlockParamUnion
-		for _, block := range response.Content {
-			switch block.Type {
-			case "text":
-				fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text(a.name, termcolor.Yellow), block.Text)
-			case "tool_use":
-				results = append(results, a.tool(ctx, block)...)
-			}
-		}
-		if len(results) == 0 {
-			return &RunOutput{}, nil
-		}
-		a.append(anthropic.NewUserMessage(results...))
 	}
+	for len(a.pending) > 0 {
+		block := a.pending[0]
+		a.pending = a.pending[1:]
+		switch block.Type {
+		case "text":
+			fmt.Fprintf(a.output, "%s: %s\n", termcolor.Text(a.name, termcolor.Yellow), block.Text)
+		case "tool_use":
+			req, err := a.toMCPToolRequest(block)
+			if err != nil {
+				return nil, err
+			}
+			return &RunOutput{
+				CallToolRequest: req,
+				Meta:            map[string]any{"toolUseID": block.ID},
+			}, nil
+		}
+	}
+	return &RunOutput{}, nil
 }
 
 func (a *Agent) LastMessageJSON() string {
