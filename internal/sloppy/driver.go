@@ -38,10 +38,6 @@ type Driver struct {
 	NewAgent func(name string) Agent
 }
 
-func (d *Driver) Start() {
-
-}
-
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	if len(d.Stack) == 0 {
 		d.Stack = append(d.Stack, Frame{Agent: d.NewAgent("")})
