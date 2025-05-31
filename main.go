@@ -81,6 +81,18 @@ func main() {
 				)
 			}
 			continue
+		case "/clear":
+			driver.Stack = []sloppy.Frame{}
+			continue
+		case "/stack":
+			for _, frame := range driver.Stack {
+				fmt.Println(frame.Name)
+			}
+			continue
+		case "/pop":
+			if len(driver.Stack) > 0 {
+				driver.Stack = driver.Stack[:len(driver.Stack)-1]
+			}
 		}
 		ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT)
 		if err := driver.Loop(ctx, text); err != nil && !errors.Is(err, context.Canceled) {

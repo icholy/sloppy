@@ -28,6 +28,7 @@ type RunOutput struct {
 }
 
 type Frame struct {
+	Name  string
 	Meta  map[string]any
 	Agent Agent
 }
@@ -40,7 +41,10 @@ type Driver struct {
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	if len(d.Stack) == 0 {
-		d.Stack = append(d.Stack, Frame{Agent: d.NewAgent("")})
+		d.Stack = append(d.Stack, Frame{
+			Name:  "sloppy",
+			Agent: d.NewAgent(""),
+		})
 	}
 	input := &RunInput{Prompt: prompt}
 	for {
@@ -69,6 +73,7 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 					continue
 				}
 				d.Stack = append(d.Stack, Frame{
+					Name:  args.Name,
 					Meta:  output.Meta,
 					Agent: d.NewAgent(args.Name),
 				})
