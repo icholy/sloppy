@@ -39,7 +39,7 @@ func (rc *RunCommand) Handle(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		return mcp.NewToolResultError("invalid arguments: command cannot be empty"), nil
 	}
 
-	cmd := exec.Command("bash", "-c", input.Command)
+	cmd := exec.CommandContext(ctx, "bash", "-c", input.Command)
 	cmd.Stdin = os.Stdin
 
 	// Both capture and display output
