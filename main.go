@@ -93,6 +93,7 @@ func main() {
 			if len(driver.Stack) > 0 {
 				driver.Stack = driver.Stack[:len(driver.Stack)-1]
 			}
+			continue
 		}
 		ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT)
 		if err := driver.Loop(ctx, text); err != nil && !errors.Is(err, context.Canceled) {
