@@ -28,7 +28,7 @@ type Driver struct {
 	Agent AgentV2
 }
 
-func (d *Driver) Run(ctx context.Context, prompt string) error {
+func (d *Driver) Loop(ctx context.Context, prompt string) error {
 	input := &RunInput{Prompt: prompt}
 	for {
 		output, err := d.Agent.RunV2(ctx, input)
