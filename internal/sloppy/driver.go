@@ -67,13 +67,13 @@ func (d *Driver) call(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallTo
 	var found bool
 	var tool Tool
 	for _, t := range d.Tools {
-		if t.Name == req.Method {
+		if t.Name == req.Params.Name {
 			found = true
 			tool = t
 		}
 	}
 	if !found {
-		return mcpx.NewToolResultErrorf("tool not found: %q", req.Method), nil
+		return mcpx.NewToolResultErrorf("tool not found: %q", req.Params.Name), nil
 	}
 	return tool.Client.CallTool(ctx, req)
 }
