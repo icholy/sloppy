@@ -24,8 +24,8 @@ type RunOutput struct {
 }
 
 type Driver struct {
-	Tools map[string]Tool
 	Agent AgentV2
+	Tools []Tool
 }
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
@@ -52,8 +52,15 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 }
 
 func (d *Driver) call(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	tool, ok := d.Tools[req.Method]
-	if !ok {
+	var found bool
+	var tool Tool
+	for _, t := range d.Tools {
+		if t.Name == req.Method {
+			found = true
+			tool = t
+		}
+	}
+	if !found {
 		return mcpx.NewToolResultErrorf("tool not found: %q", req.Method), nil
 	}
 	return tool.Client.CallTool(ctx, req)
