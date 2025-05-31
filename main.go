@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/icholy/sloppy/internal/builtin"
 	"github.com/icholy/sloppy/internal/sloppy"
@@ -79,8 +82,10 @@ func main() {
 			}
 			continue
 		}
-		if err := driver.Loop(ctx, text); err != nil {
+		ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT)
+		if err := driver.Loop(ctx, text); err != nil && !errors.Is(err, context.Canceled) {
 			log.Fatal(err)
 		}
+		stop()
 	}
 }
