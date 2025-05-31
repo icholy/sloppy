@@ -28,6 +28,7 @@ type RunOutput struct {
 type Driver struct {
 	Agent Agent
 	Tools []Tool
+	Stack []Agent
 }
 
 func (d *Driver) Loop(ctx context.Context, prompt string) error {
@@ -43,6 +44,12 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 		if req := output.CallToolRequest; req != nil {
 			data, _ := json.MarshalIndent(req.Params, "", "  ")
 			fmt.Printf("tool: %s\n", data)
+
+			// we special case the run_agent tool
+			if req.Params.Name == "run_agent" {
+				panic("not implemented")
+			}
+
 			res, err := d.call(ctx, *req)
 			if err != nil {
 				return err
