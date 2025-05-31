@@ -19,7 +19,7 @@ type AgentOptions struct {
 	Output io.Writer
 }
 
-type Agent struct {
+type AnthropicAgent struct {
 	name     string
 	client   *anthropic.Client
 	output   io.Writer
@@ -27,7 +27,7 @@ type Agent struct {
 	pending  []anthropic.ContentBlockUnion
 }
 
-func New(opt AgentOptions) *Agent {
+func NewAnthropicAgent(opt AgentOptions) *AnthropicAgent {
 	if opt.Name == "" {
 		opt.Name = "Sloppy"
 	}
@@ -38,14 +38,14 @@ func New(opt AgentOptions) *Agent {
 	if opt.Output == nil {
 		opt.Output = os.Stdout
 	}
-	return &Agent{
+	return &AnthropicAgent{
 		name:   opt.Name,
 		client: opt.Client,
 		output: opt.Output,
 	}
 }
 
-func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
+func (a *AnthropicAgent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 	if input.Prompt != "" {
 		a.append(anthropic.NewUserMessage(anthropic.NewTextBlock(input.Prompt)))
 	}
@@ -85,7 +85,7 @@ func (a *Agent) Run(ctx context.Context, input *RunInput) (*RunOutput, error) {
 	return &RunOutput{}, nil
 }
 
-func (a *Agent) LastMessageJSON() string {
+func (a *AnthropicAgent) LastMessageJSON() string {
 	if len(a.messages) == 0 {
 		return ""
 	}
@@ -94,7 +94,7 @@ func (a *Agent) LastMessageJSON() string {
 	return string(data)
 }
 
-func (a *Agent) toAnthropic(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
+func (a *AnthropicAgent) toAnthropic(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
 	var results []anthropic.ContentBlockParamUnion
 	for _, c := range res.Content {
 		if text, ok := c.(mcp.TextContent); ok {
@@ -107,7 +107,7 @@ func (a *Agent) toAnthropic(toolUseID string, res *mcp.CallToolResult) []anthrop
 	return results
 }
 
-func (a *Agent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, error) {
+func (a *AnthropicAgent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, error) {
 	var req mcp.CallToolRequest
 	req.Params.Name = block.Name
 	if err := json.Unmarshal(block.Input, &req.Params.Arguments); err != nil {
@@ -116,7 +116,7 @@ func (a *Agent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallToolRequest, 
 	return &req, nil
 }
 
-func (a *Agent) llm(ctx context.Context, tools []mcp.Tool) (*anthropic.Message, error) {
+func (a *AnthropicAgent) llm(ctx context.Context, tools []mcp.Tool) (*anthropic.Message, error) {
 	params := anthropic.MessageNewParams{
 		Model:     anthropic.ModelClaudeSonnet4_20250514,
 		MaxTokens: 1024,
@@ -140,6 +140,6 @@ func (a *Agent) llm(ctx context.Context, tools []mcp.Tool) (*anthropic.Message, 
 	return a.client.Messages.New(ctx, params)
 }
 
-func (a *Agent) append(m anthropic.MessageParam) {
+func (a *AnthropicAgent) append(m anthropic.MessageParam) {
 	a.messages = append(a.messages, m)
 }
