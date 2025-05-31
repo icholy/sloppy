@@ -84,7 +84,7 @@ func (a *Agent) LastMessageJSON() string {
 	return string(data)
 }
 
-func (a *Agent) toToolResultBlocks(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
+func (a *Agent) toAnthropicToolResult(toolUseID string, res *mcp.CallToolResult) []anthropic.ContentBlockParamUnion {
 	var results []anthropic.ContentBlockParamUnion
 	for _, c := range res.Content {
 		if text, ok := c.(mcp.TextContent); ok {
@@ -117,7 +117,7 @@ func (a *Agent) tool(ctx context.Context, block anthropic.ContentBlockUnion) []a
 		// TODO: should we just pass this up?
 		results = append(results, anthropic.NewToolResultBlock(block.ID, err.Error(), true))
 	} else {
-		results = a.toToolResultBlocks(block.ID, res)
+		results = a.toAnthropicToolResult(block.ID, res)
 	}
 	for _, b := range results {
 		if r := b.OfToolResult; r != nil && r.IsError.Value {
