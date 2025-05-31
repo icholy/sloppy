@@ -2,6 +2,8 @@ package sloppy
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/icholy/sloppy/internal/mcpx"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -39,10 +41,14 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			return err
 		}
 		if req := output.CallToolRequest; req != nil {
+			data, _ := json.MarshalIndent(req.Params, "", "  ")
+			fmt.Printf("tool: %s\n", data)
 			res, err := d.call(ctx, *req)
 			if err != nil {
 				return err
 			}
+			data, _ = json.MarshalIndent(res, "", "  ")
+			fmt.Printf("output: %s\n", data)
 			input = &RunInput{
 				CallToolResult: res,
 				Meta:           output.Meta,
