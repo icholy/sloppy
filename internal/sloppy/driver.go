@@ -56,8 +56,8 @@ func (d *Driver) Loop(ctx context.Context, prompt string) error {
 			return err
 		}
 		if req := output.CallToolRequest; req != nil {
-			data, _ := json.MarshalIndent(req.Params, "", "  ")
-			fmt.Printf("tool: %s\n", data)
+			data, _ := json.MarshalIndent(req.Params.Arguments, "", "  ")
+			fmt.Printf("tool: %s: %s\n", req.Params.Name, data)
 
 			// we special case the run_agent tool
 			if req.Params.Name == "run_agent" {
