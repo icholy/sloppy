@@ -57,7 +57,7 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	}
 	diffs, err := fuzzypatch.Parse(input.Diff)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to parse diff", err), nil
 	}
 	if len(diffs) == 0 {
 		return mcp.NewToolResultError("no diffs were provided in the request"), nil
@@ -77,7 +77,7 @@ func (ad *ApplyDiff) Handle(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	}
 	updated, err := fuzzypatch.Apply(src, edits)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to apply patch", err), nil
 	}
 	if err := os.WriteFile(input.Path, []byte(updated), 0644); err != nil {
 		return mcp.NewToolResultErrorFromErr("failed to write file", err), nil
