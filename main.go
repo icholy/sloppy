@@ -92,7 +92,7 @@ func main() {
 		}
 		ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT)
 		if err := driver.Loop(ctx, text); err != nil && !errors.Is(err, context.Canceled) {
-			log.Fatal(err)
+			log.Printf("ERROR: %s", err)
 		}
 		stop()
 	}
