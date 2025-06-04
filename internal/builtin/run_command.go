@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/icholy/sloppy/internal/mcpx"
 
@@ -18,7 +19,10 @@ type RunCommand struct{}
 func (rc *RunCommand) ServerTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool("run_command",
-			mcp.WithDescription("Execute a shell command and return its output. Use this for running commands in the terminal."),
+			mcp.WithDescription(strings.Join([]string{
+				"Execute a shell command and return its output. Use this for running commands in the terminal.",
+				"Note: prefer using ripgrep instead of find if you're in a git repository.",
+			}, "")),
 			mcp.WithString("command",
 				mcp.Required(),
 				mcp.Description("The shell command to execute."),
