@@ -121,7 +121,7 @@ func (a *AnthropicAgent) toMCP(block anthropic.ContentBlockUnion) (*mcp.CallTool
 
 func (a *AnthropicAgent) llm(ctx context.Context, tools []mcp.Tool) (*anthropic.Message, error) {
 	params := anthropic.MessageNewParams{
-		Model:     anthropic.ModelClaudeSonnet4_20250514,
+		Model:     anthropic.ModelClaudeOpus4_6,
 		MaxTokens: 1024,
 		Messages:  a.messages,
 	}
